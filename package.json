@@ -25,5 +25,8 @@
     "mysql": "^2.18.1",
     "silly-datetime": "^0.1.2",
     "validator": "^13.6.0"
+  },
+  "devDependencies": {
+    "body-parser": "^1.19.0"
   }
 }

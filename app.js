@@ -23,13 +23,12 @@ app.use(express.urlencoded({
 }));
 // 处理 multipart 数据
 app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({
-  extended: false
-}))
+
 app.use(multipartMiddleware)
 
 
 const port = process.env.PORT || 8993
+
 
 // 挂载路由
 app.use('/api', router)
@@ -43,17 +42,20 @@ app.engine('.html', require('ejs').__express);
 app.set('view engine', 'html');
 
 app.get('/', (req, res) => {
-  res.render('index', {
-    title: ""
-  });
+  res.render('index');
 })
 
+app.use(function(req, res){
+    if (req.accepts('html')) {
+      res.render('404');
+      return;
+    }
+  });
 // 错误挂载
 app.use(errorHandler())
 
 app.listen(port, () => {
-  console.log(`服务器运行成功`);
-  console.log(`运行地址: http://localhost:${ port }`)
+  console.log(`运行成功,端口${port}`,);
 })
 
 module.exports = app;

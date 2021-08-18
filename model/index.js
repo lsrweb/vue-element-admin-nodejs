@@ -33,7 +33,9 @@ module.exports = {
             if (err) {
               reject(err)
             } else {
-              resolve(data);
+              let string = JSON.stringify(data)
+              let ResultData = JSON.parse(string)
+              resolve(ResultData);
             }
             conn.release();
           });

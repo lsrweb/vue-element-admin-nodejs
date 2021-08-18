@@ -1,6 +1,8 @@
 const validator = require('../middleware/validator')
-const {body} = require("express-validator");
+const {body, header} = require("express-validator");
 const {SySqlConnect} = require("../model");
+const {validatePassword} = require('../config/default.config')
+
 
 // 注册参数验证
 exports.isRegister = validator([
@@ -44,6 +46,11 @@ exports.isLogin = validator([
       if (!response[0]) {
         return Promise.reject('账号不存在,请仔细检查后再次输入')
       }
+      req.user = response[0]
     })
   }),
+])
+
+exports.isToken = validator([
+  header('X-Token').notEmpty().withMessage('登陆失败')
 ])

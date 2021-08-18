@@ -10,24 +10,25 @@ const bodyParser = require('body-parser')
 const multipart = require('connect-multiparty');
 const multipartMiddleware = multipart();
 
+const port = process.env.PORT || 8993
 require('./model/index')
+app.use(morgan('dev'))
 
 
 app.use(cors())
-app.use(morgan('dev'))
-// 处理json 数据
-app.use(express.json())
+// // 处理json 数据
+app.use(express.json());
 // 处理 form-urllencoded数据
 app.use(express.urlencoded({
   extended: true
 }));
 // 处理 multipart 数据
 app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({extended: false}))
 
 app.use(multipartMiddleware)
 
 
-const port = process.env.PORT || 8993
 
 
 // 挂载路由
@@ -45,17 +46,17 @@ app.get('/', (req, res) => {
   res.render('index');
 })
 
-app.use(function(req, res){
-    if (req.accepts('html')) {
-      res.render('404');
-      return;
-    }
-  });
+app.use(function (req, res) {
+  if (req.accepts('html')) {
+    res.render('404');
+    return;
+  }
+});
 // 错误挂载
 app.use(errorHandler())
 
 app.listen(port, () => {
-  console.log(`运行成功,端口${port}`,);
+  console.log(`运行成功${port}`);
 })
 
 module.exports = app;

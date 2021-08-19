@@ -1,4 +1,5 @@
 const {SySqlConnect} = require("../model");
+const {response} = require("express");
 
 exports.getIndexData = (req, res, next) => {
   try {
@@ -48,7 +49,6 @@ exports.deleteTodo = async (req, res, next) => {
     const sql = `DELETE
                  FROM to_do
                  WHERE id = ${id}`
-
     SySqlConnect(sql).then((response) => {
       if (response) {
         res.status(200).json({
@@ -60,5 +60,50 @@ exports.deleteTodo = async (req, res, next) => {
 
   } catch (err) {
     next()
+  }
+}
+// 修改todo文字
+exports.updatedTodo = async (req, res, next) => {
+  try {
+    const {id,text} = req.body
+    const sql = `UPDATE to_do
+                 set text = "${text}"
+                 where id = ${id};`
+
+    SySqlConnect(sql).then((response) => {
+      if(response) {
+        res.status(200).json({
+          code: 200,
+          message: '修改成功'
+        })
+      }
+    })
+  } catch (err) {
+    next()
+  }
+}
+// 修改todo 状态
+exports.updatedTodoActive = async (req,res,next) => {
+  try {
+  //  up 正在吃饭...
+    const { id,done } = req.query
+    if(!id || !done) {
+      res.status(403).json({
+        code: 403,
+        message: '请传入参数'
+      })
+    }
+    const sql = `UPDATE to_do SET  done = '${done}' WHERE id = ${id}`
+    SySqlConnect(sql).then((response) => {
+      if(response){
+        res.status(200).json({
+          code: 200,
+          message: '已修改'
+        })
+      }
+    })
+
+  } catch (err) {
+
   }
 }

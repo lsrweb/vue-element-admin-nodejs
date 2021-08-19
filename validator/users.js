@@ -2,7 +2,9 @@ const validator = require('../middleware/validator')
 const {body, header} = require("express-validator");
 const {SySqlConnect} = require("../model");
 const {validatePassword} = require('../config/default.config')
-
+const jwtUtils = require('../utils/jwt')
+const {jwt} = require('../config/default.config')
+const {response} = require("express");
 
 // 注册参数验证
 exports.isRegister = validator([
@@ -50,7 +52,19 @@ exports.isLogin = validator([
     })
   }),
 ])
-
+// token 有效验证
 exports.isToken = validator([
-  header('X-Token').notEmpty().withMessage('登陆失败')
+  header('X_Token').notEmpty().withMessage('登陆失败').bail().custom(async (token,{req}) => {
+    await jwtUtils.verify(token, jwt).then((response) => {
+      const getNowTime = new Date().getTime()
+      const expTime = new Date(response.exp * 1000)
+      if (expTime < getNowTime) {
+        return Promise.reject('token已失效,请重新登录')
+      }
+      req.getId = response.userId
+
+    }).catch((error) => {
+      return Promise.reject('签名错误')
+    })
+  })
 ])

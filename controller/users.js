@@ -6,7 +6,8 @@ const {jwt} = require('../config/default.config')
 // md5 密码加密
 const hamc = require('../utils/hamc')
 // 树状结构转化
-const {buildTree,toTree } = require('../utils')
+const {toTree, buildArray} = require('../utils')
+const {response} = require("express");
 
 // 用户注册
 exports.register = (req, res, next) => {
@@ -35,8 +36,6 @@ exports.login = async (req, res, next) => {
                          FROM user_info
                          WHERE account = "${account}"`
     await SySqlConnect(SqlPassword).then((response) => {
-      console.log(response[0].password)
-      console.log(userPas)
       if (response != '') {
         if (response[0].password != userPas) {
           res.status(200).json({
@@ -46,7 +45,7 @@ exports.login = async (req, res, next) => {
         } else {
           jwtUtils.sign({
             userId: userinfo.id
-          }, jwt, {expiresIn: '14 days'}).then((token) => {
+          }, jwt, {expiresIn: '1 days'}).then((token) => {
             res.status(200).json({
               code: 200,
               message: '登录成功',
@@ -69,12 +68,11 @@ exports.login = async (req, res, next) => {
 // 获取用户信息
 exports.getUserInfo = async (req, res, next) => {
   try {
-    // const userToken
-
+    let userId = req.getId
 
     const sql = `SELECT *
                  FROM userinfo
-                 WHERE userinfo.id = 1`
+                 WHERE userinfo.pid = "${userId}"`
     SySqlConnect(sql).then((response) => {
       if (!response) {
         res.status(200).json({
@@ -92,24 +90,53 @@ exports.getUserInfo = async (req, res, next) => {
       }
     })
   } catch (err) {
+    console.log(err)
     next()
   }
 }
 
 
-exports.getUserRouter = async (req,res,next) => {
-  try {
-    const sql = `SELECT * from permission_router;`
-    SySqlConnect(sql).then((response) => {
-      let tree =  toTree(response)
-      res.status(200).json({
-        code: 200,
-        data: tree,
-        message: '权限路由获取成功'
-      })
+exports.getUserRouter = async (req, res, next) => {
+  let role;
+  let resRouter = []
+  const getId = req.getId
+  // 获取token 所传用户id
+  const sqlRole = `SELECT *
+                   FROM userinfo
+                   WHERE userinfo.pid = "${getId}"`
+  await SySqlConnect(sqlRole).then((response) => {
+    // 获取多角色处理情况
+    let responseRole = response[0].role.split(',')
+    role = responseRole
+  })
+  var routerId = []
+  for (let i = 0; i < role.length; i++) {
+    let getRouterSql = `SELECT *, role.id
+                        FROM role
+                        WHERE role.id = "${role[i]}"`
+   await SySqlConnect(getRouterSql).then((response) => {
+      routerId.push(response[0].role_router.split())
+      // routerId.push(test.toString())
     })
-
-  } catch (err) {
-    next()
   }
+  // 拆分路由为一个数组
+  let router = routerId.toString().split(',')
+  // 获取所有路由
+  const sql = `SELECT * from permission_router;`
+  SySqlConnect(sql).then((response) => {
+    let getRouterEnd = response
+    // 筛选路由
+    console.log(router)
+    getRouterEnd.forEach(value => {
+      if (router.includes(String(value.id))) {
+        resRouter.push(value)
+      }
+    });
+    let tree = toTree(resRouter)
+    res.status(200).json({
+      code: 200,
+      data: tree,
+      message: '权限路由获取成功'
+    })
+  })
 }

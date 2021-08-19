@@ -1,26 +1,4 @@
-const buildTree = (tarArray) => {
-  let obj = {}
-  tarArray.map((item, index) => {
-    obj[item.id] = item
-  })
-  let newArr = [];
-  for (let i = 0; i < tarArray.length; i++) {
-    let item = tarArray[i]
-    let parent = obj[item.pid]
-    if (parent) {
-      if (parent.children) {
-        parent.children.push(item)
-      } else {
-        parent.children = []
-        parent.children.push(item)
-      }
-    } else {
-      newArr.push(item)
-    }
-  }
-  return newArr
-}
-
+// 创建属性结构
 const toTree = (data, idName, parentIdName) => {
   const id = idName || "id";
   const parentId = parentIdName || "pid";
@@ -37,6 +15,7 @@ const toTree = (data, idName, parentIdName) => {
     const parent = map[item[parentId]];
     if (parent) {
       (parent.children || (parent.children = [])).push(item);
+      // 如果父级有子元素
       if (parent.children) {
         toTree(parent.children)
         parent.meta = {
@@ -47,6 +26,7 @@ const toTree = (data, idName, parentIdName) => {
         parent.alwaysShow = parent.alwaysShow == "true" ? parent.alwaysShow : false
         parent.redirect = parent.redirect == "true" ? parent.children[0].path : ''
       }
+      // 如果没有子元素
       if (!item.children) {
         item.meta = {
           title: item.title,
@@ -57,11 +37,11 @@ const toTree = (data, idName, parentIdName) => {
         item.redirect = item.redirect == 'true' ? item.children[0].path : ''
       }
     } else {
+      // 顶级路由
       item.meta = {
         title: item.title,
         icon: item.icon,
         affix: item.affix == "true" ? true : false
-        // alwaysShow: item.alwaysShow == "true" ? true : false
       }
       menu.push(item);
     }
@@ -69,7 +49,20 @@ const toTree = (data, idName, parentIdName) => {
   return menu;
 }
 
+// 数组扁平
+const buildArray = (arr) => {
+  let res6 = [];
+  for(let i=0; i < arr.length; i++){
+    if(Array.isArray(arr[i])){
+      res6 = res6.concat(buildArray(arr[i]))
+    }else{
+      res6.push(arr[i])
+    }
+  }
+  return res6;
+}
+
 module.exports = {
-  buildTree,
-  toTree
+  toTree,
+  buildArray
 }

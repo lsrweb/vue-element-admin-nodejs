@@ -6,8 +6,7 @@ const {jwt} = require('../config/default.config')
 // md5 密码加密
 const hamc = require('../utils/hamc')
 // 树状结构转化
-const {toTree, buildArray} = require('../utils')
-const {response} = require("express");
+const {toTree} = require('../utils')
 
 // 用户注册
 exports.register = (req, res, next) => {
@@ -69,11 +68,11 @@ exports.login = async (req, res, next) => {
 exports.getUserInfo = async (req, res, next) => {
   try {
     let userId = req.getId
-
+    // 筛选对应pid id 的用户信息
     const sql = `SELECT *
                  FROM userinfo
                  WHERE userinfo.pid = "${userId}"`
-    SySqlConnect(sql).then((response) => {
+    await SySqlConnect(sql).then((response) => {
       if (!response) {
         res.status(200).json({
           code: 500,
@@ -81,21 +80,33 @@ exports.getUserInfo = async (req, res, next) => {
         })
       } else {
         let newData = response[0]
+        let roleArray = newData.role.split(',')
         newData.avatar = `${baseUrl}/${response[0].avatar}`
-        res.status(200).json({
-          code: 200,
-          message: '用户信息获取成功',
-          data: newData
+        const selectRoleSql = `SELECT *
+                               FROM role`
+        // 筛选对应角色信息
+        SySqlConnect(selectRoleSql).then((response) => {
+          let testRole = []
+          response.forEach(value => {
+            if (roleArray.indexOf(String(value.id)) > -1) {
+              testRole.push(value)
+            }
+          })
+          newData.role = testRole
+          res.status(200).json({
+            code: 200,
+            message: '用户信息获取成功',
+            data: newData
+          })
         })
+
       }
     })
   } catch (err) {
-    console.log(err)
     next()
   }
 }
-
-
+// 筛选获取权限路由
 exports.getUserRouter = async (req, res, next) => {
   let role;
   let resRouter = []
@@ -114,7 +125,7 @@ exports.getUserRouter = async (req, res, next) => {
     let getRouterSql = `SELECT *, role.id
                         FROM role
                         WHERE role.id = "${role[i]}"`
-   await SySqlConnect(getRouterSql).then((response) => {
+    await SySqlConnect(getRouterSql).then((response) => {
       routerId.push(response[0].role_router.split())
       // routerId.push(test.toString())
     })
@@ -122,11 +133,11 @@ exports.getUserRouter = async (req, res, next) => {
   // 拆分路由为一个数组
   let router = routerId.toString().split(',')
   // 获取所有路由
-  const sql = `SELECT * from permission_router;`
+  const sql = `SELECT *
+               from permission_router;`
   SySqlConnect(sql).then((response) => {
     let getRouterEnd = response
     // 筛选路由
-    console.log(router)
     getRouterEnd.forEach(value => {
       if (router.includes(String(value.id))) {
         resRouter.push(value)

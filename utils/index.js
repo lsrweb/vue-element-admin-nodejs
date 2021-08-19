@@ -1,4 +1,4 @@
-// 创建属性结构
+// 创建树结构
 const toTree = (data, idName, parentIdName) => {
   const id = idName || "id";
   const parentId = parentIdName || "pid";
@@ -48,7 +48,6 @@ const toTree = (data, idName, parentIdName) => {
   });
   return menu;
 }
-
 // 数组扁平
 const buildArray = (arr) => {
   let res6 = [];
@@ -61,6 +60,8 @@ const buildArray = (arr) => {
   }
   return res6;
 }
+//
+
 
 module.exports = {
   toTree,

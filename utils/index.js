@@ -1,4 +1,5 @@
 // 创建树结构
+const {photeFilter, fileSize, filesSize} = require("../config/default.config");
 const toTree = (data, idName, parentIdName) => {
   const id = idName || "id";
   const parentId = parentIdName || "pid";
@@ -51,19 +52,47 @@ const toTree = (data, idName, parentIdName) => {
 // 数组扁平
 const buildArray = (arr) => {
   let res6 = [];
-  for(let i=0; i < arr.length; i++){
-    if(Array.isArray(arr[i])){
+  for (let i = 0; i < arr.length; i++) {
+    if (Array.isArray(arr[i])) {
       res6 = res6.concat(buildArray(arr[i]))
-    }else{
+    } else {
       res6.push(arr[i])
     }
   }
   return res6;
 }
-//
+// 图片格式验证
+const filterImage = (file) => {
+  if (photeFilter.includes(file)) {
+    return true
+  } else {
+    return false
+  }
+}
+// 图片大小验证
+const filterImageSize = (file) => {
+  const isFileSize = file / 1024 / 1024 < fileSize
+  return isFileSize
+}
+// 文件大小验证
+const filterFileSize = (file) => {
+  const isFileSize = file / 1024 / 1024 < filesSize
+  return isFileSize
+}
+
+// 格式化时间 验证文件夹
+const formTime = (date) => {
+  const year = new Date().getFullYear()
+  const month = new Date().getMonth() + 1
+  return `${year}${month}`
+}
 
 
 module.exports = {
   toTree,
-  buildArray
+  buildArray,
+  filterImage,
+  filterImageSize,
+  filterFileSize,
+  formTime
 }

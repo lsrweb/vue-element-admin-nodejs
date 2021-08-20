@@ -4,10 +4,20 @@ const router = express.Router()
 const dashboard = require('../controller/dashboard')
 const validash = require('../validator/dashboard')
 
-let multer = require('multer')
-const fs = require('fs')
+const {formTime} = require('../utils')
+const folder = formTime(new Date())
 
-let uploads = multer({dest: './public/uploads'}).single("file");
+
+let multer = require('multer')
+
+
+let uploads = multer({
+  dest: `./public/uploads/${folder}`
+}).single("file");
+
+let uploadsFile = multer({
+  dest: `./public/files/${folder}`
+}).single('files')
 
 
 router.get('/backend/index/data', dashboard.getIndexData)
@@ -19,7 +29,10 @@ router.delete('/backend/index/todo/delete', validash.isToken, dashboard.deleteTo
 router.post('/backend/index/todo/update', validash.isToken, validash.isAdd, dashboard.updatedTodo)
 router.get('/backend/index/todo/active', validash.isToken, dashboard.updatedTodoActive)
 // 全局上传图片
-router.post('/backend/upload/global', uploads, dashboard.upload)
+router.post('/backend/upload/image/global', uploads, dashboard.upload)
+
+// 全局文件上传
+router.post('/backend/upload/files/global',uploadsFile,dashboard.uploadFile)
 
 
 module.exports = router

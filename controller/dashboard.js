@@ -1,7 +1,7 @@
 const {SySqlConnect} = require("../model");
 const path = require('path');
-const multer = require('multer')
 const fs = require('fs')
+const {filterImage, filterImageSize, formTime, filterFileSize} = require("../utils");
 
 exports.getIndexData = (req, res, next) => {
   try {
@@ -121,42 +121,71 @@ exports.upload = async (req, res, next) => {
       })
     } else {
       let file = req.file;
-      await fs.renameSync('./public/uploads/' + file.filename, './public/uploads/' + file.originalname);
+      let filetype = filterImage(file.mimetype)
+      let fileSize = filterImageSize(file.size)
+      if (!filetype) {
+        res.status(400).json({
+          code: 400,
+          message: '图片格式错误!'
+        })
+        return false
+      }
+      if (!fileSize) {
+        res.status(400).json({
+          code: 400,
+          message: '上传图片太大了'
+        })
+        return false
+      }
+      const folder = formTime(new Date())
+      const extname = path.extname(file.originalname)
+      const filename = `${new Date().getTime()}${+new Date().getTime() * Math.random()}`
+      await fs.access(`./public/uploads/${folder}`, (callback) => {
+        if (callback != null) {
+          fs.mkdirSync(`./public/uploads/${folder}`)
+        }
+      })
+      await fs.renameSync(`./public/uploads/${folder}/${file.filename}`, `./public/uploads/${folder}/${filename}${extname}`);
       res.send({
         code: 200,
-        msg: '上传成功'
+        msg: '上传成功',
+        data: file
       });
     }
-
   } catch (err) {
-
+    next()
   }
+}
 
-
-  // if (req.body.file === undefined) {
-  //   return res.send({
-  //     errno: -1,
-  //     msg: 'no file'
-  //   });
-  // }
-  // const {size, mimetype, filename} = req.body.file;
-  // const types = ['jpg', 'jpeg', 'png', 'gif'];
-  // const tmpTypes = mimetype.split('/')[1];
-  // // 检查文件大小
-  // if (size >= SIZELIMIT) {
-  //   return res.send({
-  //     errno: -1,
-  //     msg: 'file is too large'
-  //   });
-  // }
-  // // 检查文件类型
-  // else if (types.indexOf(tmpTypes) < 0) {
-  //   return res.send({
-  //     errno: -1,
-  //     msg: 'not accepted filetype'
-  //   });
-  // }
-  // // 路径可根据设置的静态目录指定
-  // const url = '/public/assets/' + filename;
-
+// 全局文件上传
+exports.uploadFile = async (req, res, next) => {
+  if (!req.file) {
+    res.status(403).json({
+      code: 1,
+      message: '请上传文件'
+    })
+  } else {
+    let file = req.file;
+    let fileSize = filterFileSize(file.size)
+    if (!fileSize) {
+      res.status(400).json({
+        code: 400,
+        message: '上传文件太大了'
+      })
+      return false
+    }
+    const folder = formTime(new Date())
+    const extname = path.extname(file.originalname)
+    const filename = `${new Date().getTime()}${+new Date().getTime() * Math.random()}`
+    await fs.access(`./public/files/${folder}`, (callback) => {
+      if (callback != null) {
+        fs.mkdirSync(`./public/uploads/files/${folder}`)
+      }
+    })
+    await fs.renameSync(`./public/files/${folder}/${file.filename}`, `./public/files/${folder}/${filename}${extname}`);
+    res.send({
+      code: 200,
+      msg: '上传成功'
+    });
+  }
 }

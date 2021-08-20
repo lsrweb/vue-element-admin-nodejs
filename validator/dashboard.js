@@ -1,6 +1,7 @@
 const validator = require('../middleware/validator')
-const {body, header, query} = require("express-validator");
+const {body, header, query, check} = require("express-validator");
 const {SySqlConnect} = require("../model");
+const multer = require('multer')
 
 // 验证是否有token,参数是否传入
 exports.isAdd = validator([
@@ -21,3 +22,4 @@ exports.isToken = validator([
     })
   })
 ])
+

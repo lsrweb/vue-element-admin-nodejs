@@ -1,22 +1,7 @@
 const {SySqlConnect} = require("../model");
 const path = require('path');
-const multer = require('multer');
-
-const dir = path.resolve(__dirname, '../public/static/assets');
-const SIZELIMIT = 500000;
-const Storage = multer.diskStorage({
-  destination: function (req, file, callback) {
-    callback(null, "./download");
-  },
-  filename: function (req, file, callback) {
-    callback(null, file.fieldname + "_" + "_" + file.originalname);
-  }
-});
-
-let uploads = multer({
-  storage: Storage
-});
-
+const multer = require('multer')
+const fs = require('fs')
 
 exports.getIndexData = (req, res, next) => {
   try {
@@ -127,40 +112,51 @@ exports.updatedTodoActive = async (req, res, next) => {
 }
 
 // 全局图片上传
-exports.upload = (uploads.single('file'), async (req, res, next) => {
+exports.upload = async (req, res, next) => {
   try {
-    console.log(req.file)
+    if (!req.file) {
+      res.status(403).json({
+        code: 1,
+        message: '请上传图片'
+      })
+    } else {
+      let file = req.file;
+      await fs.renameSync('./public/uploads/' + file.filename, './public/uploads/' + file.originalname);
+      res.send({
+        code: 200,
+        msg: '上传成功'
+      });
+    }
 
-    // if (req.body.file === undefined) {
-    //   return res.send({
-    //     errno: -1,
-    //     msg: 'no file'
-    //   });
-    // }
-    // const {size, mimetype, filename} = req.body.file;
-    // const types = ['jpg', 'jpeg', 'png', 'gif'];
-    // const tmpTypes = mimetype.split('/')[1];
-    // // 检查文件大小
-    // if (size >= SIZELIMIT) {
-    //   return res.send({
-    //     errno: -1,
-    //     msg: 'file is too large'
-    //   });
-    // }
-    // // 检查文件类型
-    // else if (types.indexOf(tmpTypes) < 0) {
-    //   return res.send({
-    //     errno: -1,
-    //     msg: 'not accepted filetype'
-    //   });
-    // }
-    // // 路径可根据设置的静态目录指定
-    // const url = '/public/assets/' + filename;
-    res.json({
-      errno: 0,
-      msg: 'upload success',
-    });
   } catch (err) {
 
   }
-})
+
+
+  // if (req.body.file === undefined) {
+  //   return res.send({
+  //     errno: -1,
+  //     msg: 'no file'
+  //   });
+  // }
+  // const {size, mimetype, filename} = req.body.file;
+  // const types = ['jpg', 'jpeg', 'png', 'gif'];
+  // const tmpTypes = mimetype.split('/')[1];
+  // // 检查文件大小
+  // if (size >= SIZELIMIT) {
+  //   return res.send({
+  //     errno: -1,
+  //     msg: 'file is too large'
+  //   });
+  // }
+  // // 检查文件类型
+  // else if (types.indexOf(tmpTypes) < 0) {
+  //   return res.send({
+  //     errno: -1,
+  //     msg: 'not accepted filetype'
+  //   });
+  // }
+  // // 路径可根据设置的静态目录指定
+  // const url = '/public/assets/' + filename;
+
+}

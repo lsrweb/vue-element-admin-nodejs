@@ -19,6 +19,10 @@ let uploadsFile = multer({
   dest: `./public/files/${folder}`
 }).single('files')
 
+let uploadsImages = multer({
+  dest: `./public/uploads/${folder}`
+}).array("file",5);
+
 
 router.get('/backend/index/data', dashboard.getIndexData)
 
@@ -30,6 +34,7 @@ router.post('/backend/index/todo/update', validash.isToken, validash.isAdd, dash
 router.get('/backend/index/todo/active', validash.isToken, dashboard.updatedTodoActive)
 // 全局上传图片
 router.post('/backend/upload/image/global', uploads, dashboard.upload)
+router.post('/backend/upload/images/global',uploadsImages,dashboard.uploadsImage)
 
 // 全局文件上传
 router.post('/backend/upload/files/global',uploadsFile,dashboard.uploadFile)

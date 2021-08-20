@@ -111,7 +111,7 @@ exports.updatedTodoActive = async (req, res, next) => {
   }
 }
 
-// 全局图片上传
+// 单图片上传
 exports.upload = async (req, res, next) => {
   try {
     if (!req.file) {
@@ -156,6 +156,31 @@ exports.upload = async (req, res, next) => {
     next()
   }
 }
+// 多图上传
+exports.uploadsImage = async (req,res,next) => {
+  if(req.files.length === 0){
+    res.status(403).json({
+      code: 1,
+      message: '请上传图片'
+    })
+  }else{
+    for(let i in req.files){
+      let file = req.files[i];
+      const folder = formTime(new Date())
+      const extname = path.extname(file.originalname)
+      const filename = `${new Date().getTime()}${+new Date().getTime() * Math.random()}`
+      await fs.access(`./public/uploads/${folder}`, (callback) => {
+        if (callback != null) {
+          fs.mkdirSync(`./public/uploads/${folder}`)
+        }
+      })
+      await fs.renameSync(`./public/uploads/${folder}/${file.filename}`, `./public/uploads/${folder}/${filename}${extname}`);
+    }
+    //批量存储到数据库
+
+  }
+}
+
 
 // 全局文件上传
 exports.uploadFile = async (req, res, next) => {

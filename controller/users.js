@@ -120,13 +120,13 @@ exports.getUserRouter = async (req, res, next) => {
     let responseRole = response[0].role.split(',')
     role = responseRole
   })
-  var routerId = []
+  let routerId = []
   for (let i = 0; i < role.length; i++) {
     let getRouterSql = `SELECT *, role.id
                         FROM role
                         WHERE role.id = "${role[i]}"`
     await SySqlConnect(getRouterSql).then((response) => {
-      routerId.push(response[0].role_router.split())
+      routerId.push(response[0].role_router.split(','))
       // routerId.push(test.toString())
     })
   }
@@ -149,5 +149,34 @@ exports.getUserRouter = async (req, res, next) => {
       data: tree,
       message: '权限路由获取成功'
     })
+  })
+}
+
+// 获取角色列表
+exports.getRole = async (req,res,next) => {
+  res.status(200).code({
+    code: 200,
+    message: '角色获取成功'
+  })
+}
+// 修改角色
+exports.changeRole = async (req,res,next) => {
+  res.status(200).code({
+    code: 200,
+    message: '角色修改成功'
+  })
+}
+// 删除角色
+exports.deleteRole = async (req,res,next) => {
+  res.status(200).code({
+    code: 200,
+    message: '角色删除成功'
+  })
+}
+// 添加角色
+exports.addRole = async (req,res,next) => {
+  res.status(200).code({
+    code: 200,
+    message: '角色添加成功'
   })
 }

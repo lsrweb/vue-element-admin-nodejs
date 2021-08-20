@@ -1,5 +1,22 @@
 const {SySqlConnect} = require("../model");
-const {response} = require("express");
+const path = require('path');
+const multer = require('multer');
+
+const dir = path.resolve(__dirname, '../public/static/assets');
+const SIZELIMIT = 500000;
+const Storage = multer.diskStorage({
+  destination: function (req, file, callback) {
+    callback(null, "./download");
+  },
+  filename: function (req, file, callback) {
+    callback(null, file.fieldname + "_" + "_" + file.originalname);
+  }
+});
+
+let uploads = multer({
+  storage: Storage
+});
+
 
 exports.getIndexData = (req, res, next) => {
   try {
@@ -65,13 +82,13 @@ exports.deleteTodo = async (req, res, next) => {
 // 修改todo文字
 exports.updatedTodo = async (req, res, next) => {
   try {
-    const {id,text} = req.body
+    const {id, text} = req.body
     const sql = `UPDATE to_do
                  set text = "${text}"
                  where id = ${id};`
 
     SySqlConnect(sql).then((response) => {
-      if(response) {
+      if (response) {
         res.status(200).json({
           code: 200,
           message: '修改成功'
@@ -83,19 +100,20 @@ exports.updatedTodo = async (req, res, next) => {
   }
 }
 // 修改todo 状态
-exports.updatedTodoActive = async (req,res,next) => {
+exports.updatedTodoActive = async (req, res, next) => {
   try {
-  //  up 正在吃饭...
-    const { id,done } = req.query
-    if(!id || !done) {
+    const {id, done} = req.query
+    if (!id || !done) {
       res.status(403).json({
         code: 403,
         message: '请传入参数'
       })
     }
-    const sql = `UPDATE to_do SET  done = '${done}' WHERE id = ${id}`
+    const sql = `UPDATE to_do
+                 SET done = '${done}'
+                 WHERE id = ${id}`
     SySqlConnect(sql).then((response) => {
-      if(response){
+      if (response) {
         res.status(200).json({
           code: 200,
           message: '已修改'
@@ -107,3 +125,42 @@ exports.updatedTodoActive = async (req,res,next) => {
 
   }
 }
+
+// 全局图片上传
+exports.upload = (uploads.single('file'), async (req, res, next) => {
+  try {
+    console.log(req.file)
+
+    // if (req.body.file === undefined) {
+    //   return res.send({
+    //     errno: -1,
+    //     msg: 'no file'
+    //   });
+    // }
+    // const {size, mimetype, filename} = req.body.file;
+    // const types = ['jpg', 'jpeg', 'png', 'gif'];
+    // const tmpTypes = mimetype.split('/')[1];
+    // // 检查文件大小
+    // if (size >= SIZELIMIT) {
+    //   return res.send({
+    //     errno: -1,
+    //     msg: 'file is too large'
+    //   });
+    // }
+    // // 检查文件类型
+    // else if (types.indexOf(tmpTypes) < 0) {
+    //   return res.send({
+    //     errno: -1,
+    //     msg: 'not accepted filetype'
+    //   });
+    // }
+    // // 路径可根据设置的静态目录指定
+    // const url = '/public/assets/' + filename;
+    res.json({
+      errno: 0,
+      msg: 'upload success',
+    });
+  } catch (err) {
+
+  }
+})

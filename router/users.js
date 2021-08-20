@@ -4,10 +4,16 @@ const router = express.Router()
 const users = require('../controller/users')
 const userVal = require('../validator/users')
 
+// 管理员
+router.post('/backend/register', userVal.isRegister, users.register)
+router.post('/backend/login', userVal.isLogin, users.login)
+router.get('/backend/getUserinfo', userVal.isToken, users.getUserInfo)
+router.get('/backend/getRouter', userVal.isToken, users.getUserRouter)
+// 角色管理
+router.get('/backend/role', userVal.isToken, users.getRole)
+router.get('/backend/role/update', userVal.isToken, users.changeRole)
+router.get('/backend/role/delete', userVal.isToken, users.deleteRole)
+router.get('/backend/role/add', userVal.isToken, users.addRole)
 
-router.post('/backend/register',userVal.isRegister,users.register)
-router.post('/backend/login',userVal.isLogin,users.login)
-router.get('/backend/getUserinfo',userVal.isToken,users.getUserInfo)
-router.get('/backend/getRouter',userVal.isToken,users.getUserRouter)
 
 module.exports = router

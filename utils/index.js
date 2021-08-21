@@ -1,5 +1,8 @@
-// 创建树结构
 const {photeFilter, fileSize, filesSize} = require("../config/default.config");
+
+
+
+// 创建树结构
 const toTree = (data, idName, parentIdName) => {
   const id = idName || "id";
   const parentId = parentIdName || "pid";
@@ -87,6 +90,23 @@ const formTime = (date) => {
   return `${year}${month}`
 }
 
+// 存储创建获取时间
+const getTime  = () => {
+  const createdAt = new Date().getTime()
+  const updated = new Date().getTime()
+  return {
+    created: createdAt,
+    updated: updated
+  }
+}
+
+// 修改条目时间更新
+const changeUpdatedTime = () => {
+  const updatedTime = new Date().getTime()
+  return updatedTime
+}
+
+
 
 module.exports = {
   toTree,
@@ -94,5 +114,7 @@ module.exports = {
   filterImage,
   filterImageSize,
   filterFileSize,
-  formTime
+  formTime,
+  getTime,
+  changeUpdatedTime
 }

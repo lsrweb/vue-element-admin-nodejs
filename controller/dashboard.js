@@ -10,6 +10,7 @@ exports.getIndexData = (req, res, next) => {
     next()
   }
 }
+
 // 获取todo列表
 exports.todo = async (req, res, next) => {
   try {
@@ -149,7 +150,7 @@ exports.upload = async (req, res, next) => {
       res.send({
         code: 200,
         msg: '上传成功',
-        data: file
+        location: `/uploads/${folder}/${filename}${extname}`
       });
     }
   } catch (err) {
@@ -164,6 +165,7 @@ exports.uploadsImage = async (req,res,next) => {
       message: '请上传图片'
     })
   }else{
+    let filsPath = ""
     for(let i in req.files){
       let file = req.files[i];
       const folder = formTime(new Date())
@@ -175,13 +177,18 @@ exports.uploadsImage = async (req,res,next) => {
         }
       })
       await fs.renameSync(`./public/uploads/${folder}/${file.filename}`, `./public/uploads/${folder}/${filename}${extname}`);
+      filsPath = `uploads/${folder}/${filename}${extname}`
     }
     //批量存储到数据库
+    res.status(200).json({
+      code: 200,
+      message: '上传成功',
+      data: filsPath
+
+    })
 
   }
 }
-
-
 // 全局文件上传
 exports.uploadFile = async (req, res, next) => {
   if (!req.file) {
@@ -210,7 +217,9 @@ exports.uploadFile = async (req, res, next) => {
     await fs.renameSync(`./public/files/${folder}/${file.filename}`, `./public/files/${folder}/${filename}${extname}`);
     res.send({
       code: 200,
-      msg: '上传成功'
+      msg: '上传成功',
+      data: `/files/${folder}/${filename}${extname}`
     });
   }
 }
+

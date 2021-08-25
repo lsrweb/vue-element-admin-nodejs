@@ -15,13 +15,14 @@ let uploads = multer({
   dest: `./public/uploads/${folder}`
 }).single("file");
 
+let uploadsImages = multer({
+  dest: `./public/uploads/${folder}`
+}).any();
+
 let uploadsFile = multer({
   dest: `./public/files/${folder}`
 }).single('files')
 
-let uploadsImages = multer({
-  dest: `./public/uploads/${folder}`
-}).array("file",5);
 
 
 router.get('/backend/index/data', dashboard.getIndexData)

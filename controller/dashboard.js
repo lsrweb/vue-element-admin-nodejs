@@ -165,7 +165,7 @@ exports.uploadsImage = async (req,res,next) => {
       message: '请上传图片'
     })
   }else{
-    let filsPath = ""
+    let filsPath = []
     for(let i in req.files){
       let file = req.files[i];
       const folder = formTime(new Date())
@@ -177,10 +177,10 @@ exports.uploadsImage = async (req,res,next) => {
         }
       })
       await fs.renameSync(`./public/uploads/${folder}/${file.filename}`, `./public/uploads/${folder}/${filename}${extname}`);
-      filsPath = `uploads/${folder}/${filename}${extname}`
+      filsPath.push(`uploads/${folder}/${filename}${extname}`)
     }
     //批量存储到数据库
-    res.status(200).json({
+    res.status(200).json({ 
       code: 200,
       message: '上传成功',
       data: filsPath

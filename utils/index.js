@@ -1,7 +1,6 @@
 const {photeFilter, fileSize, filesSize} = require("../config/default.config");
 
 
-
 // 创建树结构
 const toTree = (data, idName, parentIdName) => {
   const id = idName || "id";
@@ -25,17 +24,20 @@ const toTree = (data, idName, parentIdName) => {
         parent.meta = {
           title: parent.title,
           icon: parent.icon,
-          affix: parent.affix == "true" ? true : false
+          affix: parent.affix == "true" ? true : false,
+          button_per: parent.button_per
         }
         parent.alwaysShow = parent.alwaysShow == "true" ? parent.alwaysShow : false
         parent.redirect = parent.redirect == "true" ? parent.children[0].path : ''
+
       }
       // 如果没有子元素
       if (!item.children) {
         item.meta = {
           title: item.title,
           icon: item.icon,
-          affix: item.affix == "true" ? true : false
+          affix: item.affix == "true" ? true : false,
+          button_per: item.button_per.split(',')
         }
         item.alwaysShow = item.alwaysShow == "true" ? item.alwaysShow : false
         item.redirect = item.redirect == 'true' ? item.children[0].path : ''
@@ -45,11 +47,13 @@ const toTree = (data, idName, parentIdName) => {
       item.meta = {
         title: item.title,
         icon: item.icon,
-        affix: item.affix == "true" ? true : false
+        affix: item.affix == "true" ? true : false,
+        button_per: item.button_per ? item.button_per.split(',') : delete item['button_per']
       }
       menu.push(item);
     }
   });
+
   return menu;
 }
 // 数组扁平
@@ -91,7 +95,7 @@ const formTime = (date) => {
 }
 
 // 存储创建获取时间
-const getTime  = () => {
+const getTime = () => {
   const createdAt = new Date().getTime()
   const updated = new Date().getTime()
   return {
@@ -105,7 +109,6 @@ const changeUpdatedTime = () => {
   const updatedTime = new Date().getTime()
   return updatedTime
 }
-
 
 
 module.exports = {

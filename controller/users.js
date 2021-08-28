@@ -117,8 +117,7 @@ exports.getUserRouter = async (req, res, next) => {
                    WHERE userinfo.pid = "${getId}"`
   await SySqlConnect(sqlRole).then((response) => {
     // 获取多角色处理情况
-    let responseRole = response[0].role.split(',')
-    role = responseRole
+    role = response[0].role.split(',')
   })
   let routerId = []
   for (let i = 0; i < role.length; i++) {
@@ -127,18 +126,24 @@ exports.getUserRouter = async (req, res, next) => {
                         WHERE role.id = "${role[i]}"`
     await SySqlConnect(getRouterSql).then((response) => {
       routerId.push(response[0].role_router.split(','))
-      // routerId.push(test.toString())
     })
   }
-  // 拆分路由为一个数组
+  // 路由数组
   let router = routerId.toString().split(',')
   // 获取所有路由
-  const sql = `SELECT *
-               from permission_router;`
-  SySqlConnect(sql).then((response) => {
-    let getRouterEnd = response
+  const sql = `SELECT role.role_router,
+                      permission_router_button.permission,
+                      permission_router_button.role,
+                      permission_router_button.router_id,
+                      permission_router.*
+               FROM permission_router,
+                    permission_router_button,
+                    role
+               WHERE role.id = permission_router_button.role
+                 AND permission_router_button.router_id = permission_router.id`
+  await SySqlConnect(sql).then((response) => {
     // 筛选路由
-    getRouterEnd.forEach(value => {
+    response.forEach(value => {
       if (router.includes(String(value.id))) {
         resRouter.push(value)
       }
@@ -153,30 +158,82 @@ exports.getUserRouter = async (req, res, next) => {
 }
 
 // 获取角色列表
-exports.getRole = async (req,res,next) => {
+exports.getRole = async (req, res, next) => {
   res.status(200).code({
     code: 200,
     message: '角色获取成功'
   })
 }
 // 修改角色
-exports.changeRole = async (req,res,next) => {
+exports.changeRole = async (req, res, next) => {
   res.status(200).code({
     code: 200,
     message: '角色修改成功'
   })
 }
 // 删除角色
-exports.deleteRole = async (req,res,next) => {
+exports.deleteRole = async (req, res, next) => {
   res.status(200).code({
     code: 200,
     message: '角色删除成功'
   })
 }
 // 添加角色
-exports.addRole = async (req,res,next) => {
+exports.addRole = async (req, res, next) => {
   res.status(200).code({
     code: 200,
     message: '角色添加成功'
+  })
+}
+
+
+// 获取节点列表
+exports.getRouter = async (req, res, next) => {
+  const { page,limit = 10} = req.query
+  console.log(req.query)
+  // 获取总数
+  let allCount = ""
+  const allCountSql = `SELECT * FROM permission_router`
+  SySqlConnect(allCountSql).then((response) => {
+    if(response) {
+      allCount = response.length
+    }
+  })
+
+  const sql = `SELECT * FROM permission_router LIMIT ${page == 1 ? 0 : page * limit / 2},${limit}`
+  SySqlConnect(sql).then((response) => {
+    res.status(200).json({
+      code: 200,
+      message: '节点获取成功',
+      data: response,
+      total: allCount
+    })
+  })
+
+
+}
+// 修改节点 获取信息:id
+exports.getRouterInfo = async (req, res, next) => {
+
+  res.status(200).json({
+    code: 200,
+    message: '获取信息成功'
+  })
+}
+
+// 确认修改节点
+exports.changeRouterInfo = async (req, res, next) => {
+
+  res.status(200).json({
+    code: 200,
+    message: '修改成功'
+  })
+}
+
+// 添加节点
+exports.addRouter = async (req, res, next) => {
+  res.status(200).json({
+    code: 200,
+    message: '节点添加成功'
   })
 }

@@ -25,7 +25,7 @@ const toTree = (data, idName, parentIdName) => {
           title: parent.title,
           icon: parent.icon,
           affix: parent.affix == "true" ? true : false,
-          button_per: parent.button_per
+          button_per:  parent.permission
         }
         parent.alwaysShow = parent.alwaysShow == "true" ? parent.alwaysShow : false
         parent.redirect = parent.redirect == "true" ? parent.children[0].path : ''
@@ -37,18 +37,20 @@ const toTree = (data, idName, parentIdName) => {
           title: item.title,
           icon: item.icon,
           affix: item.affix == "true" ? true : false,
-          button_per: item.button_per.split(',')
+          button_per: item.permission.split(',')
         }
         item.alwaysShow = item.alwaysShow == "true" ? item.alwaysShow : false
         item.redirect = item.redirect == 'true' ? item.children[0].path : ''
       }
-    } else {
+    }
+    else
+    {
       // 顶级路由
       item.meta = {
         title: item.title,
         icon: item.icon,
         affix: item.affix == "true" ? true : false,
-        button_per: item.button_per ? item.button_per.split(',') : delete item['button_per']
+        button_per: item.permission ? item.permission.split(',') : delete item['permission']
       }
       menu.push(item);
     }

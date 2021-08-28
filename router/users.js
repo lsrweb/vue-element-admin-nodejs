@@ -14,6 +14,13 @@ router.get('/backend/role', userVal.isToken, users.getRole)
 router.get('/backend/role/update', userVal.isToken, users.changeRole)
 router.get('/backend/role/delete', userVal.isToken, users.deleteRole)
 router.get('/backend/role/add', userVal.isToken, users.addRole)
+// 节点管理
+router.get('/backend/router',userVal.isToken,users.getRouter)
+router.get('/backend/router/get',userVal.isToken,users.getUserInfo)
+router.post('/backend/router/update',userVal.isToken,users.changeRouterInfo)
+router.post('/backend/router/add',userVal.isToken,users.addRouter)
+
+
 
 
 module.exports = router

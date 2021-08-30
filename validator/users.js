@@ -5,6 +5,8 @@ const {validatePassword} = require('../config/default.config')
 const jwtUtils = require('../utils/jwt')
 const {jwt} = require('../config/default.config')
 const {response} = require("express");
+const {objectValidate} = require("../utils/index")
+
 
 // 注册参数验证
 exports.isRegister = validator([
@@ -54,7 +56,7 @@ exports.isLogin = validator([
 ])
 // token 有效验证
 exports.isToken = validator([
-  header('X_Token').notEmpty().withMessage('登陆失败').bail().custom(async (token,{req}) => {
+  header('X_Token').notEmpty().withMessage('登陆失败').bail().custom(async (token, {req}) => {
     await jwtUtils.verify(token, jwt).then((response) => {
       const getNowTime = new Date().getTime()
       const expTime = new Date(response.exp * 1000)
@@ -68,3 +70,20 @@ exports.isToken = validator([
     })
   })
 ])
+
+exports.addRouter = (req, res, next) => {
+  let string = JSON.stringify(req.body.data)
+  const object = JSON.parse(string)
+  const docBook = {router_name: '节点名称', router_icon: '节点图标', router_component: '节点组件位置', router_path: '节点访问', router_sort: '节点排序', router_title: '节点标题', router_redirect: '节点默认重定向', router_alwaysShow: '节点默认显示规则', router_affix: '是否固定标签栏'}
+  let result = objectValidate(docBook,object)
+  console.log(result)
+  if(result) {
+    res.status(200).json({
+      code: 402,
+      message: `${result}不能为空`
+    })
+    return false
+  }
+  next()
+}
+

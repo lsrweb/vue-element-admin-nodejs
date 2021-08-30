@@ -190,7 +190,6 @@ exports.addRole = async (req, res, next) => {
 // 获取节点列表
 exports.getRouter = async (req, res, next) => {
   const { page,limit = 10} = req.query
-  console.log(req.query)
   // 获取总数
   let allCount = ""
   const allCountSql = `SELECT * FROM permission_router`
@@ -199,7 +198,6 @@ exports.getRouter = async (req, res, next) => {
       allCount = response.length
     }
   })
-
   const sql = `SELECT * FROM permission_router LIMIT ${page == 1 ? 0 : page * limit / 2},${limit}`
   SySqlConnect(sql).then((response) => {
     res.status(200).json({
@@ -232,8 +230,17 @@ exports.changeRouterInfo = async (req, res, next) => {
 
 // 添加节点
 exports.addRouter = async (req, res, next) => {
+  let data = req.body
+
   res.status(200).json({
     code: 200,
     message: '节点添加成功'
+  })
+}
+
+exports.deleteRouter = async (req,res,next) => {
+  res.status(200).json({
+    code: 200,
+    message: '节点删除成功'
   })
 }

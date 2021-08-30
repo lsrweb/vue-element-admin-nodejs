@@ -72,21 +72,15 @@ const buildArray = (arr) => {
 }
 // 图片格式验证
 const filterImage = (file) => {
-  if (photeFilter.includes(file)) {
-    return true
-  } else {
-    return false
-  }
+  return photeFilter.includes(file);
 }
 // 图片大小验证
 const filterImageSize = (file) => {
-  const isFileSize = file / 1024 / 1024 < fileSize
-  return isFileSize
+  return file / 1024 / 1024 < fileSize
 }
 // 文件大小验证
 const filterFileSize = (file) => {
-  const isFileSize = file / 1024 / 1024 < filesSize
-  return isFileSize
+  return file / 1024 / 1024 < filesSize
 }
 
 // 格式化时间 验证文件夹
@@ -112,6 +106,21 @@ const changeUpdatedTime = () => {
   return updatedTime
 }
 
+const objectValidate = (arrayDoc,array) => {
+  console.log(arrayDoc,array)
+  const docTxtArray = arrayDoc
+  const arrayObject = array
+  for (const i in arrayObject) {
+    if (arrayObject[i] == '') {
+      for (const key in docTxtArray) {
+        if (i == key) {
+          return `${docTxtArray[key]}`
+        }
+      }
+    }
+  }
+  return true
+}
 
 module.exports = {
   toTree,
@@ -121,5 +130,6 @@ module.exports = {
   filterFileSize,
   formTime,
   getTime,
-  changeUpdatedTime
+  changeUpdatedTime,
+  objectValidate
 }

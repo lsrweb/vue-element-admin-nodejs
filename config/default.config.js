@@ -6,7 +6,7 @@ module.exports = {
     database: 'express',
     port: 3306
   },
-  baseUrl: 'http://127.0.0.1:8000',
+  baseUrl: 'http://express.vaiwan.com',
   // 是否验证密码格式
   validatePassword: false,
   // token 密钥

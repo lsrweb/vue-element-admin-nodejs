@@ -20,7 +20,7 @@ router.get('/backend/router/get',userVal.isToken,users.getUserInfo)
 router.post('/backend/router/update',userVal.isToken,users.changeRouterInfo)
 router.post('/backend/router/add',userVal.isToken,userVal.addRouter,users.addRouter)
 router.delete('/backend/router/delete',userVal.isToken,users.deleteRouter)
-
+router.get('/backend/router/father',userVal.isToken,users.fatherRouter)
 
 
 

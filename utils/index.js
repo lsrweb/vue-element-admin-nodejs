@@ -102,25 +102,35 @@ const getTime = () => {
 
 // 修改条目时间更新
 const changeUpdatedTime = () => {
-  const updatedTime = new Date().getTime()
-  return updatedTime
+  return new Date().getTime()
 }
-
+// 快速判断对象中某值是否为空
 const objectValidate = (arrayDoc,array) => {
-  console.log(arrayDoc,array)
   const docTxtArray = arrayDoc
   const arrayObject = array
   for (const i in arrayObject) {
     if (arrayObject[i] == '') {
       for (const key in docTxtArray) {
         if (i == key) {
+          console.log(`${docTxtArray[key]}`)
           return `${docTxtArray[key]}`
         }
       }
     }
   }
-  return true
 }
+
+// 删除对象中某值
+const deleteObjKey = (data,deleteData) => {
+  let getData = data
+  for (const i in getData) {
+    for (const d in deleteData) {
+      delete getData[deleteData[d]]
+    }
+  }
+  return getData
+}
+
 
 module.exports = {
   toTree,
@@ -131,5 +141,6 @@ module.exports = {
   formTime,
   getTime,
   changeUpdatedTime,
-  objectValidate
+  objectValidate,
+  deleteObjKey
 }

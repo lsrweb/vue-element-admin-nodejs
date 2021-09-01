@@ -6,7 +6,8 @@ const {jwt} = require('../config/default.config')
 // md5 密码加密
 const hamc = require('../utils/hamc')
 // 树状结构转化
-const {toTree} = require('../utils')
+const {toTree, getTime} = require('../utils')
+const {response} = require("express");
 
 // 用户注册
 exports.register = (req, res, next) => {
@@ -30,6 +31,8 @@ exports.login = async (req, res, next) => {
   try {
     const {account, password} = req.body
     const userinfo = req.user
+    const userRole = req.userinfo
+    console.log(userRole)
     const userPas = hamc(password)
     const SqlPassword = `SELECT *
                          FROM user_info
@@ -43,7 +46,8 @@ exports.login = async (req, res, next) => {
           })
         } else {
           jwtUtils.sign({
-            userId: userinfo.id
+            userId: userinfo.id,
+            roleId: userRole.id
           }, jwt, {expiresIn: '1 days'}).then((token) => {
             res.status(200).json({
               code: 200,
@@ -189,16 +193,18 @@ exports.addRole = async (req, res, next) => {
 
 // 获取节点列表
 exports.getRouter = async (req, res, next) => {
-  const { page,limit = 10} = req.query
+  const {page, limit = 10} = req.query
   // 获取总数
   let allCount = ""
-  const allCountSql = `SELECT * FROM permission_router`
+  const allCountSql = `SELECT *
+                       FROM permission_router`
   SySqlConnect(allCountSql).then((response) => {
-    if(response) {
+    if (response) {
       allCount = response.length
     }
   })
-  const sql = `SELECT * FROM permission_router LIMIT ${page == 1 ? 0 : page * limit / 2},${limit}`
+  const sql = `SELECT *
+               FROM permission_router LIMIT ${page == 1 ? 0 : page * limit / 2},${limit}`
   SySqlConnect(sql).then((response) => {
     res.status(200).json({
       code: 200,
@@ -230,17 +236,83 @@ exports.changeRouterInfo = async (req, res, next) => {
 
 // 添加节点
 exports.addRouter = async (req, res, next) => {
-  let data = req.body
-
-  res.status(200).json({
-    code: 200,
-    message: '节点添加成功'
+  let insertId, roleId, userId = ""
+  // 解密token,获取userid
+  jwtUtils.verify(req.headers.x_token, jwt).then((response) => {
+    roleId = response.roleId
   })
+  // 解构参数数据
+  const {router_name, router_icon, router_component, router_path, router_sort, router_title, router_redirect, router_alwaysShow, router_affix, router_father} = req.data
+  // 解构参数按钮权限
+  const buttonPermission = req.data.page_button
+  // 插入路由数据
+  const sqlRouter = `INSERT INTO permission_router (pid, component, path, sort, title, icon, name, redirect, alwaysShow, affix, created_router, updated_router)
+                     VALUES ("${router_father}", "${router_component}", "${router_path}", "${router_sort}", "${router_title}", "${router_icon}", "${router_name}",
+                             "${router_redirect}", "${router_alwaysShow}", "${router_affix}", "${getTime().created}", "${getTime().updated}")`
+  // 插入按钮权限
+  await SySqlConnect(sqlRouter).then((response) => {
+    insertId = response.insertId
+  })
+  // const sqlRouterButton = `INSERT INTO permission_router_button (permission, role, router_id, created_button, updated_button)
+  //                          VALUES ("${buttonPermission}", "${roleId}", "${insertId}", "${getTime().created}", "${getTime().updated}")`
+
+  // https://www.npmjs.com/package/mysql SQL注入
+  let post = [buttonPermission, roleId, insertId, getTime().created, getTime().updated]
+  const sqlRouterButton = `INSERT INTO permission_router_button (permission, role, router_id, created_button, updated_button)
+                           VALUES (?, ?, ?, ?, ?)`
+  await SySqlConnect(sqlRouterButton, post).then((response) => {
+    res.status(200).json({
+      code: 200,
+      message: '节点添加成功'
+    })
+  })
+
+
 }
 
-exports.deleteRouter = async (req,res,next) => {
-  res.status(200).json({
-    code: 200,
-    message: '节点删除成功'
+exports.deleteRouter = async (req, res, next) => {
+  try {
+    const {id} = req.body
+    const sql = `DELETE
+                 FROM permission_router
+                 WHERE id = ? `
+    const sqlBtn = `DELETE
+                    FROM permission_router_button
+                    WHERE router_id = ?`
+    const sqlArr = [id]
+
+
+    await SySqlConnect(sql, sqlArr)
+    await SySqlConnect(sqlBtn, sqlArr)
+    res.status(200).json({
+      code: 200,
+      message: '节点删除成功'
+    })
+  } catch (err) {
+    res.status(500).json({
+      error: err
+    })
+  }
+
+}
+
+exports.fatherRouter = async (req, res, next) => {
+  const sql = `SELECT *
+               FROM permission_router
+               WHERE component = 'Layout'`
+  SySqlConnect(sql).then((response) => {
+    if (response) {
+      res.status(200).json({
+        code: 200,
+        message: '获取父级节点成功',
+        data: response
+      })
+    } else {
+      res.status(200).json({
+        code: 200,
+        message: '获取父级节点成功',
+        data: []
+      })
+    }
   })
 }

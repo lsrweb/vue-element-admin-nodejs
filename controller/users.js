@@ -273,6 +273,15 @@ exports.addRouter = async (req, res, next) => {
 exports.deleteRouter = async (req, res, next) => {
   try {
     const {id} = req.body
+
+
+
+
+
+
+
+
+
     const sql = `DELETE
                  FROM permission_router
                  WHERE id = ? `

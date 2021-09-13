@@ -162,21 +162,18 @@ exports.getUserRouter = async (req, res, next) => {
 
 // 获取角色列表
 exports.getRole = async (req, res, next) => {
-  const sql = `SELECT * FROM role`
+  const sql = `SELECT *
+               FROM role`
   await SySqlConnect(sql).then((response) => {
-    let result = response
     res.status(200).json({
       code: 200,
       message: '角色获取成功',
-      data: result
+      data: response
     })
   })
-
-
 }
 // 修改角色
 exports.changeRole = async (req, res, next) => {
-  const sql = ``
 
 
   res.status(200).json({
@@ -186,17 +183,36 @@ exports.changeRole = async (req, res, next) => {
 }
 // 删除角色
 exports.deleteRole = async (req, res, next) => {
-  res.status(200).json({
-    code: 200,
-    message: '角色删除成功'
+  const {id} = req.query
+  const sql = `DELETE
+               FROM role
+               WHERE id = ?`
+  await SySqlConnect(sql, [id]).then((response) => {
+    res.status(200).json({
+      code: 200,
+      message: '角色删除成功'
+    })
   })
+
+
 }
 // 添加角色
 exports.addRole = async (req, res, next) => {
-  res.status(200).json({
-    code: 200,
-    message: '角色添加成功'
+  const {name, role, sort} = req.body
+  const sql = `INSERT INTO \`nodejs\`.\`role\` (\`role_name\`, \`role\`, \`sort\`, \`created\`, \`update\`)
+               VALUES (?, ?, ?, ?, ?)`
+  await SySqlConnect(sql, [name, role, sort, getTime().created, getTime().updated]).then((response) => {
+    if (response) {
+      res.status(200).json({
+        code: 200,
+        message: '角色添加成功'
+      })
+    } else {
+      res.status(500)
+    }
+
   })
+
 }
 
 
@@ -231,12 +247,14 @@ exports.getRouterInfo = async (req, res, next) => {
   const sql = `SELECT *
                FROM permission_router
                WHERE id = ?`
-  const sqlButton = `SELECT * FROM permission_router_button WHERE router_id = ?`
+  const sqlButton = `SELECT *
+                     FROM permission_router_button
+                     WHERE router_id = ?`
 
   let resultButton = null
 
-  await SySqlConnect(sqlButton,[id]).then((res) => {
-    if(res[0].permission != '') {
+  await SySqlConnect(sqlButton, [id]).then((res) => {
+    if (res[0].permission != '') {
       resultButton = res[0].permission
     } else {
       resultButton = '未设置按钮权限'
@@ -246,7 +264,7 @@ exports.getRouterInfo = async (req, res, next) => {
     res.status(200).json({
       code: 200,
       message: '获取信息成功',
-      data:{
+      data: {
         routerInfo: response[0],
         buttonPermission: resultButton
       }
@@ -259,11 +277,23 @@ exports.getRouterInfo = async (req, res, next) => {
 exports.changeRouterInfo = async (req, res, next) => {
 
   try {
-    const { id,pid,component,path,sort,title,icon,name,redirect,alwaysShow,affix,button} = req.body
-    const infoSql = `UPDATE permission_router SET pid = ?,sort = ?,component = ?, path = ?, title = ?, icon = ?, name = ?, redirect = ?, alwaysShow = ?, affix = ?, updated_router = ? WHERE id = ?`
+    const {id, pid, component, path, sort, title, icon, name, redirect, alwaysShow, affix, button} = req.body
+    const infoSql = `UPDATE permission_router
+                     SET pid            = ?,
+                         sort           = ?,
+                         component      = ?,
+                         path           = ?,
+                         title          = ?,
+                         icon           = ?,
+                         name           = ?,
+                         redirect       = ?,
+                         alwaysShow     = ?,
+                         affix          = ?,
+                         updated_router = ?
+                     WHERE id = ?`
     const btnSql = 'UPDATE permission_router_button SET permission = ?,updated_button = ? WHERE router_id = ? AND role = ?'
-    await SySqlConnect(infoSql,[pid,sort,component,path,title,icon,name,redirect,alwaysShow,affix,changeUpdatedTime(),id])
-    await SySqlConnect(btnSql,[button,changeUpdatedTime(),id,req.roleId]).then(() => {
+    await SySqlConnect(infoSql, [pid, sort, component, path, title, icon, name, redirect, alwaysShow, affix, changeUpdatedTime(), id])
+    await SySqlConnect(btnSql, [button, changeUpdatedTime(), id, req.roleId]).then(() => {
       res.status(200).json({
         code: 200,
         message: '修改成功'

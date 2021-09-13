@@ -16,7 +16,7 @@ router.get('/backend/role/delete', userVal.isToken, users.deleteRole)
 router.get('/backend/role/add', userVal.isToken, users.addRole)
 // 节点管理
 router.get('/backend/router',userVal.isToken,users.getRouter)
-router.get('/backend/router/get',userVal.isToken,users.getUserInfo)
+router.get('/backend/router/get',userVal.isToken,users.getRouterInfo)
 router.post('/backend/router/update',userVal.isToken,users.changeRouterInfo)
 router.post('/backend/router/add',userVal.isToken,userVal.addRouter,users.addRouter)
 router.delete('/backend/router/delete',userVal.isToken,users.deleteRouter)

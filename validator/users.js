@@ -67,7 +67,7 @@ exports.isLogin = validator([
 ])
 // token 有效验证
 exports.isToken = validator([
-    header('X_Token').notEmpty().withMessage('登陆失败').bail().custom(async (token, {req}) => {
+    header('token').notEmpty().withMessage('登陆失败').bail().custom(async (token, {req}) => {
         await jwtUtils.verify(token, jwt).then((response) => {
             const getNowTime = new Date().getTime()
             const expTime = new Date(response.exp * 1000)
@@ -75,6 +75,7 @@ exports.isToken = validator([
                 return Promise.reject('token已失效,请重新登录')
             }
             req.getId = response.userId
+            req.roleId = response.roleId
 
         }).catch((error) => {
             return Promise.reject('签名错误')

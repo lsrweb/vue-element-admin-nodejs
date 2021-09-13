@@ -1,9 +1,9 @@
 module.exports = {
   host: {
-    hostname: 'localhost',
-    username: 'root',
-    password: 'admins',
-    database: 'express',
+    hostname: '123.57.150.75',
+    username: 'nodejs',
+    password: 'GAF7JhN4ZnDHy7hH',
+    database: 'nodejs',
     port: 3306
   },
   baseUrl: 'http://express.vaiwan.com',
@@ -16,6 +16,4 @@ module.exports = {
   // 图片 / 文件 大小限制 (MB)
   fileSize: 5,
   filesSize: 20
-
-
 }

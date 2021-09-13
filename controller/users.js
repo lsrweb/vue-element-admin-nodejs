@@ -6,7 +6,7 @@ const {jwt} = require('../config/default.config')
 // md5 密码加密
 const hamc = require('../utils/hamc')
 // 树状结构转化
-const {toTree, getTime} = require('../utils')
+const {toTree, getTime, changeUpdatedTime} = require('../utils')
 const {response} = require("express");
 
 // 用户注册
@@ -32,7 +32,6 @@ exports.login = async (req, res, next) => {
     const {account, password} = req.body
     const userinfo = req.user
     const userRole = req.userinfo
-    console.log(userRole)
     const userPas = hamc(password)
     const SqlPassword = `SELECT *
                          FROM user_info
@@ -163,28 +162,38 @@ exports.getUserRouter = async (req, res, next) => {
 
 // 获取角色列表
 exports.getRole = async (req, res, next) => {
-  res.status(200).code({
-    code: 200,
-    message: '角色获取成功'
+  const sql = `SELECT * FROM role`
+  await SySqlConnect(sql).then((response) => {
+    let result = response
+    res.status(200).json({
+      code: 200,
+      message: '角色获取成功',
+      data: result
+    })
   })
+
+
 }
 // 修改角色
 exports.changeRole = async (req, res, next) => {
-  res.status(200).code({
+  const sql = ``
+
+
+  res.status(200).json({
     code: 200,
     message: '角色修改成功'
   })
 }
 // 删除角色
 exports.deleteRole = async (req, res, next) => {
-  res.status(200).code({
+  res.status(200).json({
     code: 200,
     message: '角色删除成功'
   })
 }
 // 添加角色
 exports.addRole = async (req, res, next) => {
-  res.status(200).code({
+  res.status(200).json({
     code: 200,
     message: '角色添加成功'
   })
@@ -198,14 +207,14 @@ exports.getRouter = async (req, res, next) => {
   let allCount = ""
   const allCountSql = `SELECT *
                        FROM permission_router`
-  SySqlConnect(allCountSql).then((response) => {
+  await SySqlConnect(allCountSql).then((response) => {
     if (response) {
       allCount = response.length
     }
   })
   const sql = `SELECT *
                FROM permission_router LIMIT ${page == 1 ? 0 : page * limit / 2},${limit}`
-  SySqlConnect(sql).then((response) => {
+  await SySqlConnect(sql).then((response) => {
     res.status(200).json({
       code: 200,
       message: '节点获取成功',
@@ -218,22 +227,53 @@ exports.getRouter = async (req, res, next) => {
 }
 // 修改节点 获取信息:id
 exports.getRouterInfo = async (req, res, next) => {
+  const {id} = req.query
+  const sql = `SELECT *
+               FROM permission_router
+               WHERE id = ?`
+  const sqlButton = `SELECT * FROM permission_router_button WHERE router_id = ?`
 
-  res.status(200).json({
-    code: 200,
-    message: '获取信息成功'
+  let resultButton = null
+
+  await SySqlConnect(sqlButton,[id]).then((res) => {
+    if(res[0].permission != '') {
+      resultButton = res[0].permission
+    } else {
+      resultButton = '未设置按钮权限'
+    }
   })
+  await SySqlConnect(sql, [id]).then((response) => {
+    res.status(200).json({
+      code: 200,
+      message: '获取信息成功',
+      data:{
+        routerInfo: response[0],
+        buttonPermission: resultButton
+      }
+    })
+  })
+
 }
 
 // 确认修改节点
 exports.changeRouterInfo = async (req, res, next) => {
 
-  res.status(200).json({
-    code: 200,
-    message: '修改成功'
-  })
-}
+  try {
+    const { id,pid,component,path,sort,title,icon,name,redirect,alwaysShow,affix,button} = req.body
+    const infoSql = `UPDATE permission_router SET pid = ?,sort = ?,component = ?, path = ?, title = ?, icon = ?, name = ?, redirect = ?, alwaysShow = ?, affix = ?, updated_router = ? WHERE id = ?`
+    const btnSql = 'UPDATE permission_router_button SET permission = ?,updated_button = ? WHERE router_id = ? AND role = ?'
+    await SySqlConnect(infoSql,[pid,sort,component,path,title,icon,name,redirect,alwaysShow,affix,changeUpdatedTime(),id])
+    await SySqlConnect(btnSql,[button,changeUpdatedTime(),id,req.roleId]).then(() => {
+      res.status(200).json({
+        code: 200,
+        message: '修改成功'
+      })
+    })
+  } catch (err) {
+    next()
+  }
 
+}
 // 添加节点
 exports.addRouter = async (req, res, next) => {
   let insertId, roleId, userId = ""
@@ -269,17 +309,9 @@ exports.addRouter = async (req, res, next) => {
 
 
 }
-
 exports.deleteRouter = async (req, res, next) => {
   try {
     const {id} = req.body
-
-
-
-
-
-
-
 
 
     const sql = `DELETE
@@ -289,14 +321,14 @@ exports.deleteRouter = async (req, res, next) => {
                     FROM permission_router_button
                     WHERE router_id = ?`
     const sqlArr = [id]
-
-
     await SySqlConnect(sql, sqlArr)
-    await SySqlConnect(sqlBtn, sqlArr)
-    res.status(200).json({
-      code: 200,
-      message: '节点删除成功'
+    await SySqlConnect(sqlBtn, sqlArr).then((response) => {
+      res.status(200).json({
+        code: 200,
+        message: '节点删除成功'
+      })
     })
+
   } catch (err) {
     res.status(500).json({
       error: err
@@ -304,7 +336,6 @@ exports.deleteRouter = async (req, res, next) => {
   }
 
 }
-
 exports.fatherRouter = async (req, res, next) => {
   const sql = `SELECT *
                FROM permission_router

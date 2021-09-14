@@ -6,7 +6,7 @@ module.exports = {
     database: 'nodejs',
     port: 3306
   },
-  baseUrl: 'http://express.vaiwan.com',
+  baseUrl: 'http://express.api.srliforever.ltd',
   // 是否验证密码格式
   validatePassword: false,
   // token 密钥
@@ -17,3 +17,4 @@ module.exports = {
   fileSize: 5,
   filesSize: 20
 }
+

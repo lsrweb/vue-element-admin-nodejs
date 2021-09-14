@@ -8,7 +8,11 @@ router.post('/backend/register', userVal.isRegister, users.register)
 router.post('/backend/login', userVal.isLogin, users.login)
 router.get('/backend/getUserinfo', userVal.isToken, users.getUserInfo)
 router.get('/backend/getRouter', userVal.isToken, users.getUserRouter)
+
 router.get('/backend/getAllAdmin',userVal.isToken,users.getAllAdmin)
+router.get('/backend/getAdmin/info',userVal.isToken,users.changeAdminGetInfo)
+router.post('/backend/getAdmin/add',userVal.isToken,users.addAdmin)
+router.delete('/backend/getAdmin/delete',userVal.isToken,users.deleteAdmin)
 // 角色管理
 router.get('/backend/role', userVal.isToken, users.getRole)
 router.post('/backend/role/update', userVal.isToken, users.changeRole)

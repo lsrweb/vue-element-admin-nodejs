@@ -8,6 +8,7 @@ const hamc = require('../utils/hamc')
 // 树状结构转化
 const {toTree, getTime, changeUpdatedTime} = require('../utils')
 const {response} = require("express");
+const {NULL} = require("mysql/lib/protocol/constants/types");
 
 // 用户注册
 exports.register = (req, res, next) => {
@@ -199,7 +200,7 @@ exports.deleteRole = async (req, res, next) => {
   const sql = `DELETE
                FROM role
                WHERE id = ?`
-  await SySqlConnect(sql, [id]).then((response) => {
+  await SySqlConnect(sql, [id]).then(() => {
     res.status(200).json({
       code: 200,
       message: '角色删除成功'
@@ -504,20 +505,46 @@ exports.fatherRouter = async (req, res, next) => {
 // 获取所有管理员
 exports.getAllAdmin = async (req, res, next) => {
   const sql = `SELECT *
-               FROM user_info`
+               FROM user_info,
+                    userinfo,
+                    role
+               WHERE userinfo.pid = user_info.id
+                 AND userinfo.role = role.id `
   await SySqlConnect(sql).then((response) => {
+    console.log(response)
+    let result = response[0]
+    let del = ['password', 'pid', 'updated', 'role_router', 'sort']
+    del.forEach((val) => {
+      delete result[val]
+    })
     res.status(200).json({
       code: 200,
       message: "管理员列表获取成功",
-      data: response
+      data: [result]
     })
   })
 }
 // 添加管理员
 exports.addAdmin = async (req, res, next) => {
-  res.status(200).json({
-    code: 200,
-    message: "管理员添加成功",
+  const {account, username, avatar, role, email, usercop,password} = req.body.data
+  const newPass = hamc(password)
+
+  const insertAccount = `INSERT INTO \`nodejs\`.\`user_info\` (\`username\`, \`account\`, \`email\`, \`avatar\`, \`password\`, \`created\`, \`updated\`)
+                         VALUES (?, ?, ?, ?, ?, ?, ?)`
+
+  const inserInfo = `INSERT INTO \`nodejs\`.\`userinfo\` (\`pid\`, \`role\`, \`usercop\`, \`name\`, \`created\`, \`updated\`) VALUES (?, ?, ?, ?, ?, ?)`
+  const accountResult =  await SySqlConnect(insertAccount,[username,account,email,avatar,newPass,getTime().created,getTime().updated]).then(res => {
+    if(res) {
+      return res.insertId
+    }
+  })
+  await SySqlConnect(inserInfo,[accountResult,role,usercop,NULL,getTime().created,getTime().updated]).then((response) => {
+    if(response){
+      res.status(200).json({
+        code: 200,
+        message: '管理员添加成功'
+      })
+    }
   })
 }
 // 修改管理员获取信息
@@ -536,9 +563,19 @@ exports.changeAdmin = async (req, res, next) => {
 }
 // 删除成功
 exports.deleteAdmin = async (req, res, next) => {
-  res.status(200).json({
-    code: 200,
-    message: "删除成功",
+  const {id} = req.query
+  const sql = `DELETE
+               FROM \`nodejs\`.\`userinfo\`
+               WHERE \`id\` = ?`
+
+  await SySqlConnect(sql, [id]).then((response) => {
+    if (response) {
+      res.status(200).json({
+        code: 200,
+        message: "删除成功",
+      })
+    }
   })
+
 }
 

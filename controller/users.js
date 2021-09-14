@@ -509,10 +509,11 @@ exports.getAllAdmin = async (req, res, next) => {
                     userinfo,
                     role
                WHERE userinfo.pid = user_info.id
-                 AND userinfo.role = role.id `
+                 AND (
+                 userinfo.role = role.id
+                 )`
   await SySqlConnect(sql).then((response) => {
-    console.log(response)
-    let result = response[0]
+    let result = response
     let del = ['password', 'pid', 'updated', 'role_router', 'sort']
     del.forEach((val) => {
       delete result[val]
@@ -520,7 +521,7 @@ exports.getAllAdmin = async (req, res, next) => {
     res.status(200).json({
       code: 200,
       message: "管理员列表获取成功",
-      data: [result]
+      data: [...result]
     })
   })
 }

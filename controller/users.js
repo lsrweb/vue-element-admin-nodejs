@@ -174,12 +174,25 @@ exports.getRole = async (req, res, next) => {
 }
 // 修改角色
 exports.changeRole = async (req, res, next) => {
-
-
-  res.status(200).json({
-    code: 200,
-    message: '角色修改成功'
+  const {id, role, role_name, sort} = req.body
+  const sql = `UPDATE \`nodejs\`.\`role\`
+               SET \`role\`      = ?,
+                   \`sort\`      = ?,
+                   \`role_name\` = ?,
+                   \`update\`    = ?
+               WHERE \`id\` = ?`
+  await SySqlConnect(sql, [role, sort, role_name, changeUpdatedTime(), id]).then((response) => {
+    if (response) {
+      res.status(200).json({
+        code: 200,
+        message: '角色修改成功'
+      })
+    } else {
+      res.status(500)
+    }
   })
+
+
 }
 // 删除角色
 exports.deleteRole = async (req, res, next) => {
@@ -193,8 +206,6 @@ exports.deleteRole = async (req, res, next) => {
       message: '角色删除成功'
     })
   })
-
-
 }
 // 添加角色
 exports.addRole = async (req, res, next) => {
@@ -210,15 +221,110 @@ exports.addRole = async (req, res, next) => {
     } else {
       res.status(500)
     }
+  })
+}
+/**
+ * 获取对应权限路由
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise<void>}
+ */
+exports.roleRouter = async (req, res, next) => {
+  const {id} = req.query
+  const roleSql = `SELECT role_router
+                   FROM role
+                   WHERE role.id = ?`
+  const roleRouterSql = `SELECT *
+                         FROM permission_router`
+  const resultRouter = await SySqlConnect(roleSql, [id]).then((res) => {
+    return res[0].role_router.split(',')
+  })
+  const resRouter = await SySqlConnect(roleRouterSql).then((res) => {
+    return res
+  })
+  let endRouter = []
+  resRouter.forEach(val => {
+    if (resultRouter.indexOf(String(val.id)) > -1) {
+      endRouter.push(val)
+      val.check = true
+    } else {
+      endRouter.push(val)
+      val.check = false
+    }
+  })
+  res.status(200).json({
+    code: 200,
+    message: '角色权限获取成功',
+    data: endRouter
+  })
+}
 
+exports.updateRoleButton = async(req,res,next) => {
+  const { button,id} = req.body
+  const sql = `UPDATE \`nodejs\`.\`permission_router_button\` SET \`permission\` = ? WHERE \`role\` = ? AND \`router_id\` = ?`
+  await SySqlConnect(sql,[button,req.roleId,id]).then((response) => {
+    res.status(200).json({
+      code: 200,
+      message: '修改成功'
+    })
   })
 
 }
 
+exports.resetRouter = async (req, res, next) => {
+  const {data, id} = req.body
+  const resetSql = `UPDATE \`nodejs\`.\`role\`
+                    SET \`role_router\` = ?
+                    WHERE \`id\` = ?`
+  await SySqlConnect(resetSql, [data.join(','), id]).then((response) => {
+    if (response) {
+      res.status(200).json({
+        code: 200,
+        message: '修改成功'
+      })
+    }
+  })
+}
+
+// exports.getAllRouter = async (req,res,next) =>{
+//   const sql = `SELECT * FROM permission_router`
+//   await SySqlConnect(sql).then((response) => {
+//     res.status(200).json({
+//       code: 200,
+//       message: '数据获取成功',
+//       data: response
+//     })
+//   })
+// }
+
+
+exports.getRoleButton = async (req, res, next) => {
+  const {role, router} = req.query
+  const sql = `SELECT *
+               FROM permission_router_button
+               WHERE permission_router_button.role = ?
+                 AND permission_router_button.router_id = ?`
+  await SySqlConnect(sql,[role,router]).then((response) => {
+    if(response[0]){
+      const result = response[0].permission.split(',')
+      res.status(200).json({
+        code: 200,
+        message: '按钮权限获取成功',
+        data: result
+      })
+    } else {
+      res.status(200).json({
+        code: 503,
+        message: '暂无查询结果'
+      })
+    }
+  })
+}
 
 // 获取节点列表
 exports.getRouter = async (req, res, next) => {
-  const {page, limit = 10} = req.query
+  const {page = 1, limit = 10} = req.query
   // 获取总数
   let allCount = ""
   const allCountSql = `SELECT *
@@ -247,18 +353,24 @@ exports.getRouterInfo = async (req, res, next) => {
   const sql = `SELECT *
                FROM permission_router
                WHERE id = ?`
+  // 查询按钮表,角色表  -> 按钮表路由id== ? AND 按钮表 role == ? AND 角色表id == id
   const sqlButton = `SELECT *
                      FROM permission_router_button
-                     WHERE router_id = ?`
-
+                     WHERE router_id = ? AND role > ?`
   let resultButton = null
-
-  await SySqlConnect(sqlButton, [id]).then((res) => {
-    if (res[0].permission != '') {
-      resultButton = res[0].permission
+  await SySqlConnect(sqlButton, [id,0]).then((res) => {
+    if(res != "") {
+      if (res[0].permission != '' && res != "") {
+        resultButton = res[0]
+      }
     } else {
       resultButton = '未设置按钮权限'
     }
+  })
+
+  const sqlRole = `SELECT * FROM role WHERE id = ?`
+  await SySqlConnect(sqlRole,[resultButton.role]).then((response) => {
+    resultButton.permissionName = response[0]
   })
   await SySqlConnect(sql, [id]).then((response) => {
     res.status(200).json({
@@ -270,14 +382,12 @@ exports.getRouterInfo = async (req, res, next) => {
       }
     })
   })
-
 }
 
 // 确认修改节点
 exports.changeRouterInfo = async (req, res, next) => {
-
   try {
-    const {id, pid, component, path, sort, title, icon, name, redirect, alwaysShow, affix, button} = req.body
+    const {id, pid, component, path, sort, title, icon, name, redirect, alwaysShow, affix, button,roleId} = req.body
     const infoSql = `UPDATE permission_router
                      SET pid            = ?,
                          sort           = ?,
@@ -293,7 +403,7 @@ exports.changeRouterInfo = async (req, res, next) => {
                      WHERE id = ?`
     const btnSql = 'UPDATE permission_router_button SET permission = ?,updated_button = ? WHERE router_id = ? AND role = ?'
     await SySqlConnect(infoSql, [pid, sort, component, path, title, icon, name, redirect, alwaysShow, affix, changeUpdatedTime(), id])
-    await SySqlConnect(btnSql, [button, changeUpdatedTime(), id, req.roleId]).then(() => {
+    await SySqlConnect(btnSql, [button, changeUpdatedTime(), id, roleId]).then(() => {
       res.status(200).json({
         code: 200,
         message: '修改成功'
@@ -312,7 +422,7 @@ exports.addRouter = async (req, res, next) => {
     roleId = response.roleId
   })
   // 解构参数数据
-  const {router_name, router_icon, router_component, router_path, router_sort, router_title, router_redirect, router_alwaysShow, router_affix, router_father} = req.data
+  const {router_name, router_icon, router_component, router_path, router_sort, router_title, router_redirect, router_alwaysShow, router_affix, router_father,role} = req.data
   // 解构参数按钮权限
   const buttonPermission = req.data.page_button
   // 插入路由数据
@@ -327,7 +437,7 @@ exports.addRouter = async (req, res, next) => {
   //                          VALUES ("${buttonPermission}", "${roleId}", "${insertId}", "${getTime().created}", "${getTime().updated}")`
 
   // https://www.npmjs.com/package/mysql SQL注入
-  let post = [buttonPermission, roleId, insertId, getTime().created, getTime().updated]
+  let post = [buttonPermission, role, insertId, getTime().created, getTime().updated]
   const sqlRouterButton = `INSERT INTO permission_router_button (permission, role, router_id, created_button, updated_button)
                            VALUES (?, ?, ?, ?, ?)`
   await SySqlConnect(sqlRouterButton, post).then((response) => {
@@ -364,7 +474,6 @@ exports.deleteRouter = async (req, res, next) => {
       error: err
     })
   }
-
 }
 exports.fatherRouter = async (req, res, next) => {
   const sql = `SELECT *
@@ -386,3 +495,11 @@ exports.fatherRouter = async (req, res, next) => {
     }
   })
 }
+
+
+
+
+// 管理员管理
+
+
+

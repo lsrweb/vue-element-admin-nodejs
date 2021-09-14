@@ -3,12 +3,12 @@ const express = require('express')
 const router = express.Router()
 const users = require('../controller/users')
 const userVal = require('../validator/users')
-
 // 管理员
 router.post('/backend/register', userVal.isRegister, users.register)
 router.post('/backend/login', userVal.isLogin, users.login)
 router.get('/backend/getUserinfo', userVal.isToken, users.getUserInfo)
 router.get('/backend/getRouter', userVal.isToken, users.getUserRouter)
+router.get('/backend/getAllAdmin',userVal.isToken,users.getAllAdmin)
 // 角色管理
 router.get('/backend/role', userVal.isToken, users.getRole)
 router.post('/backend/role/update', userVal.isToken, users.changeRole)

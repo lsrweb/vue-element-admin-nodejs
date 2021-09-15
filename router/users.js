@@ -10,9 +10,11 @@ router.get('/backend/getUserinfo', userVal.isToken, users.getUserInfo)
 router.get('/backend/getRouter', userVal.isToken, users.getUserRouter)
 
 router.get('/backend/getAllAdmin',userVal.isToken,users.getAllAdmin)
-router.get('/backend/getAdmin/info',userVal.isToken,users.changeAdminGetInfo)
+// router.get('/backend/getAdmin/info',userVal.isToken,users.changeAdminGetInfo)    已废弃,由前台控制
 router.post('/backend/getAdmin/add',userVal.isToken,users.addAdmin)
 router.delete('/backend/getAdmin/delete',userVal.isToken,users.deleteAdmin)
+router.post('/backend/getAdmin/update',userVal.isToken,users.changeAdmin)
+router.post('/backend/getAdmin/password',userVal.isToken,users.password)
 // 角色管理
 router.get('/backend/role', userVal.isToken, users.getRole)
 router.post('/backend/role/update', userVal.isToken, users.changeRole)

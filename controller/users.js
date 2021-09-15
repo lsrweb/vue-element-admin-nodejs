@@ -352,28 +352,17 @@ exports.getRouter = async (req, res, next) => {
 // 修改节点 获取信息:id
 exports.getRouterInfo = async (req, res, next) => {
   const {id} = req.query
-  const sql = `SELECT *
-               FROM permission_router
-               WHERE id = ?`
+  const sql = `SELECT *  FROM permission_router WHERE id = ?`
   // 查询按钮表,角色表  -> 按钮表路由id== ? AND 按钮表 role == ? AND 角色表id == id
-  const sqlButton = `SELECT *
-                     FROM permission_router_button
-                     WHERE router_id = ?
-                       AND role > ?`
+  const sqlButton = `SELECT * FROM permission_router_button WHERE router_id = ? AND role > ?`
   let resultButton = null
+  // 筛选按钮
   await SySqlConnect(sqlButton, [id, 0]).then((res) => {
-    if (res != "") {
-      if (res[0].permission != '' && res != "") {
+      if (res[0]) {
         resultButton = res[0]
       }
-    } else {
-      resultButton = '未设置按钮权限'
-    }
   })
-
-  const sqlRole = `SELECT *
-                   FROM role
-                   WHERE id = ?`
+  const sqlRole = `SELECT * FROM role WHERE id = ?`
   await SySqlConnect(sqlRole, [resultButton.role]).then((response) => {
     resultButton.permissionName = response[0]
   })
@@ -499,13 +488,13 @@ exports.fatherRouter = async (req, res, next) => {
   })
 }
 
-
 // 管理员管理
 
 // 获取所有管理员
 exports.getAllAdmin = async (req, res, next) => {
   const {page = 1, limit = 10} = req.query
-  const allToatl = `SELECT * FROM user_info`
+  const allToatl = `SELECT *
+                    FROM user_info`
   let total = ""
   await SySqlConnect(allToatl).then((response) => {
     total = response.length
@@ -568,18 +557,62 @@ exports.addAdmin = async (req, res, next) => {
   })
 }
 // 修改管理员获取信息
-exports.changeAdminGetInfo = async (req, res, next) => {
-  res.status(200).json({
-    code: 200,
-    message: "信息获取成功",
-  })
-}
+// exports.changeAdminGetInfo = async (req, res, next) => {
+//   const sql = `SELECT user_info.id,
+//                       user_info.username,
+//                       user_info.account,
+//                       user_info.email,
+//                       user_info.avatar,
+//                       user_info.created,
+//                       user_info.updated,
+//                       userinfo.role,
+//                       userinfo.usercop,
+//                       role.role_name
+//                FROM user_info,
+//                     userinfo,
+//                     role
+//                WHERE userinfo.pid = user_info.id
+//                  AND (
+//                  userinfo.role = role.id
+//                  ) `
+//
+//   res.status(200).json({
+//     code: 200,
+//     message: "信息获取成功",
+//   })
+// }
 // 修改管理员
 exports.changeAdmin = async (req, res, next) => {
-  res.status(200).json({
-    code: 200,
-    message: "修改成功",
+  const {account, avatar, email, id, role, usercop, username} = req.body.data
+  console.log(id)
+  const sqlAccount = `UPDATE \`nodejs\`.\`user_info\`
+                      SET \`username\` = ?,
+                          \`account\`  = ?,
+                          \`email\`    = ?,
+                          \`avatar\`   = ?,
+                          \`updated\`  = ?
+                      WHERE \`id\` = ?`
+  const sqlInfo = `UPDATE \`nodejs\`.\`userinfo\`
+                   SET \`usercop\` = ?,
+                       \`name\`    = ?,
+                       \`role\`    = ?,
+                       \`updated\` = ?
+                   WHERE \`pid\` = ?`
+  const accountChange = await SySqlConnect(sqlAccount, [username, account, email, avatar, changeUpdatedTime(), id]).then((response) => {
+    if (response) {
+      return true
+    }
   })
+  if (accountChange) {
+    await SySqlConnect(sqlInfo, [usercop, NULL, role, changeUpdatedTime(), id]).then((response) => {
+      if (response && accountChange) {
+        res.status(200).json({
+          code: 200,
+          message: "修改成功",
+        })
+      }
+    })
+  }
 }
 // 删除成功
 exports.deleteAdmin = async (req, res, next) => {
@@ -597,4 +630,20 @@ exports.deleteAdmin = async (req, res, next) => {
   })
 
 }
+// 修改密码
+exports.password = async (req, res, next) => {
+  const {id, pas} = req.body
+  const sql = `UPDATE \`nodejs\`.\`user_info\`
+               SET \`password\` = ?
+               WHERE \`id\` = ?`
+  await SySqlConnect(sql, [hamc(pas), id]).then((response) => {
+    if (response) {
+      res.status(200).json({
+        code: 200,
+        message: '密码修改成功'
+      })
+    }
+  })
 
+
+}

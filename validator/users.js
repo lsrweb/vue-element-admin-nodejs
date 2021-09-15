@@ -39,14 +39,13 @@ exports.isLogin = validator([
     body('account').notEmpty().withMessage('请输入登录账号'),
     body('password').notEmpty().withMessage('请输入登录密码').bail().custom(async (password, {req}) => {
         // 密码须以小写字母开头,长度6-18字符,除下划线外不可含有其他字符
-        const reg = /^[a-zA-Z]\w{5,17}$/
-        if (!reg.test(password)) {
-            return Promise.reject('密码格式错误')
-        }
+        // const reg = /^[a-zA-Z]\w{5,17}$/
+        // if (!reg.test(password)) {
+        //     return Promise.reject('密码格式错误')
+        // }
         const sql = `SELECT *
                      FROM user_info
                      WHERE account = "${req.body.account}"`
-
         let pid = ""
         await SySqlConnect(sql).then((response) => {
             // console.log(response)

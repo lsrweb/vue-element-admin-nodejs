@@ -504,14 +504,31 @@ exports.fatherRouter = async (req, res, next) => {
 
 // 获取所有管理员
 exports.getAllAdmin = async (req, res, next) => {
-  const sql = `SELECT *
+  const {page = 1, limit = 10} = req.query
+  const allToatl = `SELECT * FROM user_info`
+  let total = ""
+  await SySqlConnect(allToatl).then((response) => {
+    total = response.length
+  })
+  const sql = `SELECT user_info.id,
+                      user_info.username,
+                      user_info.account,
+                      user_info.email,
+                      user_info.avatar,
+                      user_info.created,
+                      user_info.updated,
+                      userinfo.role,
+                      userinfo.usercop,
+                      role.role_name
                FROM user_info,
                     userinfo,
                     role
                WHERE userinfo.pid = user_info.id
                  AND (
                  userinfo.role = role.id
-                 )`
+                 )
+                 LIMIT ${page == 1 ? 0 : page * limit / 2}
+                   , ${limit}`
   await SySqlConnect(sql).then((response) => {
     let result = response
     let del = ['password', 'pid', 'updated', 'role_router', 'sort']
@@ -521,26 +538,28 @@ exports.getAllAdmin = async (req, res, next) => {
     res.status(200).json({
       code: 200,
       message: "管理员列表获取成功",
-      data: [...result]
+      data: [...result],
+      alltotal: total
     })
   })
 }
 // 添加管理员
 exports.addAdmin = async (req, res, next) => {
-  const {account, username, avatar, role, email, usercop,password} = req.body.data
+  const {account, username, avatar, role, email, usercop, password} = req.body.data
   const newPass = hamc(password)
 
   const insertAccount = `INSERT INTO \`nodejs\`.\`user_info\` (\`username\`, \`account\`, \`email\`, \`avatar\`, \`password\`, \`created\`, \`updated\`)
                          VALUES (?, ?, ?, ?, ?, ?, ?)`
 
-  const inserInfo = `INSERT INTO \`nodejs\`.\`userinfo\` (\`pid\`, \`role\`, \`usercop\`, \`name\`, \`created\`, \`updated\`) VALUES (?, ?, ?, ?, ?, ?)`
-  const accountResult =  await SySqlConnect(insertAccount,[username,account,email,avatar,newPass,getTime().created,getTime().updated]).then(res => {
-    if(res) {
+  const inserInfo = `INSERT INTO \`nodejs\`.\`userinfo\` (\`pid\`, \`role\`, \`usercop\`, \`name\`, \`created\`, \`updated\`)
+                     VALUES (?, ?, ?, ?, ?, ?)`
+  const accountResult = await SySqlConnect(insertAccount, [username, account, email, avatar, newPass, getTime().created, getTime().updated]).then(res => {
+    if (res) {
       return res.insertId
     }
   })
-  await SySqlConnect(inserInfo,[accountResult,role,usercop,NULL,getTime().created,getTime().updated]).then((response) => {
-    if(response){
+  await SySqlConnect(inserInfo, [accountResult, role, usercop, NULL, getTime().created, getTime().updated]).then((response) => {
+    if (response) {
       res.status(200).json({
         code: 200,
         message: '管理员添加成功'
@@ -565,11 +584,10 @@ exports.changeAdmin = async (req, res, next) => {
 // 删除成功
 exports.deleteAdmin = async (req, res, next) => {
   const {id} = req.query
-  const sql = `DELETE
-               FROM \`nodejs\`.\`userinfo\`
-               WHERE \`id\` = ?`
-
-  await SySqlConnect(sql, [id]).then((response) => {
+  // 左连接两表删除
+  const sqlUser = `DELETE
+  \`userinfo\`,\`user_info\` FROM \`userinfo\` LEFT JOIN \`user_info\` ON \`userinfo\`.pid = \`user_info\`.id WHERE \`user_info\`.id = ? `
+  await SySqlConnect(sqlUser, [id]).then((response) => {
     if (response) {
       res.status(200).json({
         code: 200,

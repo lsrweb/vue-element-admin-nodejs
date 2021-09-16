@@ -1,7 +1,7 @@
 const {SySqlConnect} = require("../model");
 const path = require('path');
 const fs = require('fs')
-const {filterImage, filterImageSize, formTime, filterFileSize} = require("../utils");
+const {filterImage, filterImageSize, formTime, filterFileSize, getTime} = require("../utils");
 
 exports.getIndexData = (req, res, next) => {
   try {
@@ -158,15 +158,15 @@ exports.upload = async (req, res, next) => {
   }
 }
 // 多图上传
-exports.uploadsImage = async (req,res,next) => {
-  if(req.files.length === 0){
+exports.uploadsImage = async (req, res, next) => {
+  if (req.files.length === 0) {
     res.status(403).json({
       code: 1,
       message: '请上传图片'
     })
-  }else{
+  } else {
     let filsPath = []
-    for(let i in req.files){
+    for (let i in req.files) {
       let file = req.files[i];
       const folder = formTime(new Date())
       const extname = path.extname(file.originalname)
@@ -223,3 +223,40 @@ exports.uploadFile = async (req, res, next) => {
   }
 }
 
+
+// 文章
+exports.getArticle = async (req, res, next) => {
+  const sql = `SELECT *
+               FROM article`
+  await SySqlConnect(sql).then((response) => {
+    if (response) {
+      res.status(200).json({
+        code: 200,
+        message: "文章获取成功",
+        data: response
+      })
+    }
+  })
+}
+
+
+exports.addArticle = async (req, res, next) => {
+  const {title, content} = req.body
+
+  const sql = `INSERT INTO \`nodejs\`.\`article\` (\`title\`, \`created\`, \`content\`)
+               VALUES (?, ?, ?)`
+  await SySqlConnect(sql, [title, getTime().created, content]).then((response) => {
+    if (response) {
+      res.status(200).json({
+        code: 200,
+        message: '添加成功'
+      })
+    }
+  }).catch((err) => {
+    res.status(500).json({
+      code: 500,
+      message: err
+    })
+  })
+
+}

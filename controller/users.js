@@ -542,7 +542,6 @@ exports.getAllAdmin = async (req, res, next) => {
 // 添加管理员
 exports.addAdmin = async (req, res, next) => {
   const {account, username, avatar, role, email, usercop, password} = req.body.data
-  console.log(avatar)
   const newPass = hamc(password)
 
   const insertAccount = `INSERT INTO \`nodejs\`.\`user_info\` (\`username\`, \`account\`, \`email\`, \`avatar\`, \`password\`, \`created\`, \`updated\`)
@@ -559,7 +558,7 @@ exports.addAdmin = async (req, res, next) => {
     if (response) {
       res.status(200).json({
         code: 200,
-        message: '管理员添加成功'
+        message: '管理员添加成功',
       })
     }
   })
@@ -626,8 +625,7 @@ exports.changeAdmin = async (req, res, next) => {
 exports.deleteAdmin = async (req, res, next) => {
   const {id} = req.query
   // 左连接两表删除
-  const sqlUser = `DELETE
-  \`userinfo\`,\`user_info\` FROM \`userinfo\` LEFT JOIN \`user_info\` ON \`userinfo\`.pid = \`user_info\`.id WHERE \`user_info\`.id = ? `
+  const sqlUser = `DELETE \`userinfo\`,\`user_info\` FROM \`userinfo\` LEFT JOIN \`user_info\` ON \`userinfo\`.pid = \`user_info\`.id WHERE \`user_info\`.id = ? `
   await SySqlConnect(sqlUser, [id]).then((response) => {
     if (response) {
       res.status(200).json({
@@ -636,14 +634,11 @@ exports.deleteAdmin = async (req, res, next) => {
       })
     }
   })
-
 }
 // 修改密码
 exports.password = async (req, res, next) => {
   const {id, pas} = req.body
-  const sql = `UPDATE \`nodejs\`.\`user_info\`
-               SET \`password\` = ?
-               WHERE \`id\` = ?`
+  const sql = `UPDATE \`nodejs\`.\`user_info\` SET \`password\` = ? WHERE \`id\` = ?`
   await SySqlConnect(sql, [hamc(pas), id]).then((response) => {
     if (response) {
       res.status(200).json({
@@ -652,6 +647,4 @@ exports.password = async (req, res, next) => {
       })
     }
   })
-
-
 }

@@ -40,6 +40,10 @@ router.post('/backend/upload/images/global',uploadsImages,dashboard.uploadsImage
 // 全局文件上传
 router.post('/backend/upload/files/global',uploadsFile,dashboard.uploadFile)
 
+// 文章管理
+router.get('/backend/article/index',validash.isToken,dashboard.getArticle)
+router.post('/backend/article/add',validash.hasToken,dashboard.addArticle)
+
 
 module.exports = router
 

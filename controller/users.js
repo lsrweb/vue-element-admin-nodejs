@@ -352,17 +352,24 @@ exports.getRouter = async (req, res, next) => {
 // 修改节点 获取信息:id
 exports.getRouterInfo = async (req, res, next) => {
   const {id} = req.query
-  const sql = `SELECT *  FROM permission_router WHERE id = ?`
+  const sql = `SELECT *
+               FROM permission_router
+               WHERE id = ?`
   // 查询按钮表,角色表  -> 按钮表路由id== ? AND 按钮表 role == ? AND 角色表id == id
-  const sqlButton = `SELECT * FROM permission_router_button WHERE router_id = ? AND role > ?`
+  const sqlButton = `SELECT *
+                     FROM permission_router_button
+                     WHERE router_id = ?
+                       AND role > ?`
   let resultButton = null
   // 筛选按钮
   await SySqlConnect(sqlButton, [id, 0]).then((res) => {
-      if (res[0]) {
-        resultButton = res[0]
-      }
+    if (res[0]) {
+      resultButton = res[0]
+    }
   })
-  const sqlRole = `SELECT * FROM role WHERE id = ?`
+  const sqlRole = `SELECT *
+                   FROM role
+                   WHERE id = ?`
   await SySqlConnect(sqlRole, [resultButton.role]).then((response) => {
     resultButton.permissionName = response[0]
   })
@@ -535,19 +542,20 @@ exports.getAllAdmin = async (req, res, next) => {
 // 添加管理员
 exports.addAdmin = async (req, res, next) => {
   const {account, username, avatar, role, email, usercop, password} = req.body.data
+  console.log(avatar)
   const newPass = hamc(password)
 
   const insertAccount = `INSERT INTO \`nodejs\`.\`user_info\` (\`username\`, \`account\`, \`email\`, \`avatar\`, \`password\`, \`created\`, \`updated\`)
                          VALUES (?, ?, ?, ?, ?, ?, ?)`
 
-  const inserInfo = `INSERT INTO \`nodejs\`.\`userinfo\` (\`pid\`, \`role\`, \`usercop\`, \`name\`, \`created\`, \`updated\`)
-                     VALUES (?, ?, ?, ?, ?, ?)`
+  const inserInfo = `INSERT INTO \`nodejs\`.\`userinfo\` (\`pid\`, \`role\`, \`usercop\`, \`name\`, \`avatar\`, \`created\`, \`updated\`)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)`
   const accountResult = await SySqlConnect(insertAccount, [username, account, email, avatar, newPass, getTime().created, getTime().updated]).then(res => {
     if (res) {
       return res.insertId
     }
   })
-  await SySqlConnect(inserInfo, [accountResult, role, usercop, NULL, getTime().created, getTime().updated]).then((response) => {
+  await SySqlConnect(inserInfo, [accountResult, role, usercop, NULL, avatar, getTime().created, getTime().updated]).then((response) => {
     if (response) {
       res.status(200).json({
         code: 200,

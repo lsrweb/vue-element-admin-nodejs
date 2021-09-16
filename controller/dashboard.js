@@ -180,7 +180,7 @@ exports.uploadsImage = async (req,res,next) => {
       filsPath.push(`uploads/${folder}/${filename}${extname}`)
     }
     //批量存储到数据库
-    res.status(200).json({ 
+    res.status(200).json({
       code: 200,
       message: '上传成功',
       data: filsPath
